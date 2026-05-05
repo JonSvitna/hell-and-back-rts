@@ -174,14 +174,14 @@ const Hero = () => {
             </div>
 
             <h1 className="hero-title">
-              <span className="hero-line-1">COMMAND YOUR ARMY.</span>
-              <span className="hero-line-1">GO THROUGH HELL.</span>
-              <span className="hero-line-2">COME BACK <em>VICTORIOUS.</em></span>
+              <span className="hero-line-1">Command your army.</span>
+              <span className="hero-line-1">Go through hell.</span>
+              <span className="hero-line-2">Come back <em>victorious.</em></span>
             </h1>
 
             <p className="hero-sub">
-              Hell &amp; Back is a faction-based mobile RTS for iOS, built around
-              fast battles, readable units, and real-time tactical decisions.
+              A faction-based mobile RTS for iOS. Fast battles. Readable units.
+              Real-time tactical decisions — in three to five minutes flat.
             </p>
 
             <div className="hero-actions">
@@ -193,8 +193,8 @@ const Hero = () => {
 
             <div className="hero-meta">
               <div className="meta-cell">
-                <span className="meta-k">MATCH TIMER</span>
-                <span className="meta-v mono">{mm}:{ss}</span>
+                <span className="meta-k">SESSION</span>
+                <span className="meta-v">3–5 min</span>
               </div>
               <div className="meta-cell">
                 <span className="meta-k">FACTIONS</span>
@@ -205,8 +205,8 @@ const Hero = () => {
                 <span className="meta-v">iOS</span>
               </div>
               <div className="meta-cell">
-                <span className="meta-k">SESSION</span>
-                <span className="meta-v">3–5 MIN</span>
+                <span className="meta-k">MATCH CLOCK</span>
+                <span className="meta-v mono">{mm}:{ss}</span>
               </div>
             </div>
           </div>
@@ -214,11 +214,6 @@ const Hero = () => {
           <div className="hero-phone-wrap">
             <PhoneMockup />
           </div>
-        </div>
-
-        <div className="hero-scroll">
-          <span>SCROLL</span>
-          <span className="hero-scroll-line"/>
         </div>
       </div>
     </section>

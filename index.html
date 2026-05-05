@@ -8,28 +8,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="styles.css"/>
-
-<!-- Three.js + post-processing (importmap so addons can resolve "three") -->
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-  }
-}
-</script>
-<script type="module">
-  import * as THREE from 'three';
-  import { EffectComposer }  from 'three/addons/postprocessing/EffectComposer.js';
-  import { RenderPass }      from 'three/addons/postprocessing/RenderPass.js';
-  import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-  import { AfterimagePass }  from 'three/addons/postprocessing/AfterimagePass.js';
-  import { OutputPass }      from 'three/addons/postprocessing/OutputPass.js';
-  window.THREE = THREE;
-  window.THREE_POST = { EffectComposer, RenderPass, UnrealBloomPass, AfterimagePass, OutputPass };
-  window.__threeReady = true;
-  window.dispatchEvent(new Event('three-ready'));
-</script>
 </head>
 <body>
 <div id="root"></div>

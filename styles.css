@@ -120,7 +120,9 @@ body::before {
   position: absolute; inset: 28px;
   border: 1px solid var(--line);
   overflow: hidden;
-  background: var(--bg-1);
+  background:
+    radial-gradient(ellipse at 70% 40%, color-mix(in oklab, var(--accent) 12%, transparent), transparent 55%),
+    var(--bg-1);
 }
 
 .battlefield { position: absolute; inset: 0; width: 100%; height: 100%; }
@@ -206,15 +208,8 @@ body::before {
   pointer-events: none;
 }
 
-/* HUD corners (scanline + brackets) */
-.soldier-stage::before, .soldier-stage::after {
-  content: ''; position: absolute; inset: 0; pointer-events: none;
-}
-.soldier-stage::before {
-  background: repeating-linear-gradient(0deg, transparent 0 3px, oklch(0 0 0 / 0.18) 3px 4px);
-  opacity: 0.45;
-}
-:root.no-scan .soldier-stage::before { display: none; }
+/* HUD scanline overlay disabled on the hero stage — cleaner read for the phone mock */
+.soldier-stage::before, .soldier-stage::after { content: none; }
 
 .soldier-hud { position: absolute; inset: 18px; pointer-events: none; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; color: var(--accent); }
 .hud-tag { position: absolute; opacity: 0.85; }
@@ -240,7 +235,7 @@ body::before {
   padding: 6px 10px;
   border: 1px solid var(--accent);
   background: oklch(0 0 0 / 0.4);
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 .hero-tag .dot {
   width: 6px; height: 6px; background: var(--accent); border-radius: 50%;
@@ -251,19 +246,18 @@ body::before {
 
 .hero-title {
   font-family: var(--font-display);
-  font-weight: 700;
-  font-size: clamp(48px, 8vw, 124px);
-  line-height: 0.92;
-  letter-spacing: -0.03em;
-  margin: 0 0 22px;
-  text-transform: uppercase;
+  font-weight: 600;
+  font-size: clamp(40px, 5.6vw, 78px);
+  line-height: 1.0;
+  letter-spacing: -0.035em;
+  margin: 0 0 24px;
   text-wrap: balance;
 }
 .hero-line-1 { display: block; color: var(--fg-0); }
-.hero-line-2 { display: block; color: var(--fg-2); }
+.hero-line-2 { display: block; color: var(--fg-1); }
 .hero-line-2 em {
   font-style: normal; color: var(--accent);
-  text-shadow: 0 0 30px var(--accent-soft);
+  text-shadow: 0 0 32px var(--accent-soft);
 }
 
 .hero-sub {
@@ -338,23 +332,27 @@ body::before {
 /* ---------- Section scaffolding ---------- */
 section { position: relative; z-index: 1; }
 .section-head {
-  max-width: 1320px; margin: 0 auto;
-  padding: 120px 28px 56px;
+  max-width: 1200px; margin: 0 auto;
+  padding: 140px 28px 56px;
 }
 .section-eyebrow {
-  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.22em;
-  color: var(--accent); margin-bottom: 18px;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.24em;
+  color: var(--accent); margin-bottom: 22px;
+  text-transform: uppercase;
 }
 .section-title {
-  font-family: var(--font-display); font-weight: 700;
-  font-size: clamp(32px, 4.5vw, 64px); line-height: 1.0;
-  letter-spacing: -0.02em; margin: 0 0 20px;
+  font-family: var(--font-display); font-weight: 600;
+  font-size: clamp(34px, 4.6vw, 60px); line-height: 1.02;
+  letter-spacing: -0.03em; margin: 0 0 22px;
   text-wrap: balance;
 }
 .section-lede {
-  max-width: 620px; color: var(--fg-1);
-  font-size: clamp(15px, 1.2vw, 17px); line-height: 1.6; margin: 0;
+  max-width: 600px; color: var(--fg-1);
+  font-size: clamp(15px, 1.15vw, 17px); line-height: 1.65; margin: 0;
   text-wrap: pretty;
+}
+@media (max-width: 720px) {
+  .section-head { padding: 96px 20px 40px; }
 }
 
 /* ---------- Factions ---------- */
@@ -400,8 +398,8 @@ section { position: relative; z-index: 1; }
 .faction-icon { width: 56px; height: 56px; }
 
 .faction-title h3 {
-  font-family: var(--font-display); font-weight: 700;
-  font-size: 32px; letter-spacing: 0.02em; margin: 0 0 4px;
+  font-family: var(--font-display); font-weight: 600;
+  font-size: 30px; letter-spacing: -0.02em; margin: 0 0 6px;
   color: var(--accent);
 }
 .faction-role { font-family: var(--font-mono); font-size: 12px; color: var(--fg-2); margin: 0; letter-spacing: 0.1em; }
@@ -610,38 +608,46 @@ section { position: relative; z-index: 1; }
 /* ---------- Hero two-column overlay ---------- */
 .hero-overlay-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr);
-  gap: 36px;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 48px;
   align-items: center;
   max-width: none;
   width: 100%;
-  padding: 56px 56px;
+  padding: 64px 64px;
 }
-.hero-copy { max-width: 640px; pointer-events: auto; }
+.hero-copy { max-width: 620px; pointer-events: auto; }
 .hero-phone-wrap {
   display: flex; justify-content: center; align-items: center;
   pointer-events: auto;
+  position: relative;
+}
+.hero-phone-wrap::before {
+  content: ''; position: absolute; inset: -40px;
+  background: radial-gradient(ellipse at center, var(--accent-soft), transparent 70%);
+  filter: blur(40px);
+  z-index: -1;
+  pointer-events: none;
 }
 @media (max-width: 1024px) {
-  .hero-overlay-grid { grid-template-columns: 1fr; padding: 40px 28px; gap: 28px; }
-  .hero-phone-wrap { order: -1; transform: scale(0.92); }
+  .hero-overlay-grid { grid-template-columns: 1fr; padding: 48px 32px; gap: 36px; }
+  .hero-phone-wrap { order: -1; transform: scale(0.94); }
 }
 @media (max-width: 600px) {
-  .hero-overlay-grid { padding: 28px 16px; }
-  .hero-phone-wrap { transform: scale(0.78); margin: -32px 0; }
+  .hero-overlay-grid { padding: 28px 18px 36px; gap: 24px; }
+  .hero-phone-wrap { transform: scale(0.82); margin: -24px 0 -16px; }
 }
 
 /* ---------- iPhone mockup ---------- */
 .phone {
   position: relative;
-  width: 280px; height: 580px;
+  width: 300px; height: 620px;
   background: linear-gradient(160deg, #1a1c22 0%, #0a0b0f 100%);
-  border-radius: 44px;
+  border-radius: 46px;
   padding: 12px;
   box-shadow:
     0 0 0 2px oklch(0.30 0.01 260),
     0 30px 60px oklch(0 0 0 / 0.6),
-    0 0 80px var(--accent-soft);
+    0 0 100px var(--accent-soft);
 }
 .phone-notch {
   position: absolute; top: 18px; left: 50%;
@@ -724,15 +730,13 @@ section { position: relative; z-index: 1; }
 .ph-ab em { font-style: normal; font-size: 8px; letter-spacing: 0.1em; color: var(--fg-2); }
 .ph-ab.hot { border-color: var(--accent); box-shadow: 0 0 14px var(--accent-soft); }
 
-/* ---------- Hero title overrides for new 3-line headline ---------- */
-.hero-title { font-size: clamp(36px, 5.5vw, 78px); line-height: 0.98; }
-.hero-line-1 { display: block; color: var(--fg-0); }
-.hero-line-2 em { font-style: normal; color: var(--accent); text-shadow: 0 0 30px var(--accent-soft); }
+/* ---------- Hero title overrides removed: handled in primary .hero-title rule */
 
-/* Reduce soldier scene visibility behind the copy/phone so text reads */
+/* Reduce backdrop visibility behind the copy/phone so text reads */
 .hero-overlay-grid::before {
   content: ''; position: absolute; inset: 0;
-  background: radial-gradient(ellipse at 30% 50%, oklch(0 0 0 / 0.55), transparent 65%);
+  background:
+    linear-gradient(90deg, oklch(0 0 0 / 0.55) 0%, oklch(0 0 0 / 0.25) 55%, transparent 100%);
   pointer-events: none;
 }
 
