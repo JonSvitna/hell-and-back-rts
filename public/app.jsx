@@ -1,4 +1,5 @@
 const { useState, useEffect, useRef } = React;
+const CinematicHero = window.CinematicHero;
 
 /* ---------- Tiny inline icons ---------- */
 const Glyph = {
@@ -52,173 +53,14 @@ const Nav = () => (
         <li><a href="#factions">Factions</a></li>
         <li><a href="#mobile">Mobile</a></li>
         <li><a href="#strategy">Strategy</a></li>
-        <li><a href="#access">Early Access</a></li>
+        <li><a href="#early-access">Early Access</a></li>
       </ul>
-      <a href="#access" className="nav-cta">
+      <a href="#early-access" className="nav-cta">
         Get Early Access <Glyph.arrow width="16" height="16"/>
       </a>
     </div>
   </nav>
 );
-
-/* ---------- iPhone gameplay mockup (pure CSS/SVG) ---------- */
-const PhoneMockup = () => {
-  const [hp, setHp] = useState({ a: 78, b: 64, c: 92 });
-  useEffect(() => {
-    const id = setInterval(() => {
-      setHp(h => ({
-        a: Math.max(20, Math.min(100, h.a + (Math.random()*10 - 5))),
-        b: Math.max(20, Math.min(100, h.b + (Math.random()*10 - 6))),
-        c: Math.max(20, Math.min(100, h.c + (Math.random()*10 - 4))),
-      }));
-    }, 1400);
-    return () => clearInterval(id);
-  }, []);
-  return (
-    <div className="phone" aria-hidden="true">
-      <div className="phone-notch" />
-      <div className="phone-screen">
-        {/* status bar */}
-        <div className="ph-status mono">
-          <span>9:41</span>
-          <span>● LIVE · 12:47</span>
-          <span>5G ▮▮▮</span>
-        </div>
-        {/* battlefield */}
-        <div className="ph-field">
-          <svg viewBox="0 0 300 460" preserveAspectRatio="xMidYMid slice" className="ph-map">
-            <defs>
-              <pattern id="phgrid" width="24" height="24" patternUnits="userSpaceOnUse">
-                <path d="M24 0H0V24" fill="none" stroke="oklch(0.4 0.04 80 / 0.25)" strokeWidth="0.5"/>
-              </pattern>
-              <radialGradient id="phglow" cx="0.5" cy="0.4" r="0.6">
-                <stop offset="0%" stopColor="oklch(0.4 0.1 80 / 0.4)"/>
-                <stop offset="100%" stopColor="transparent"/>
-              </radialGradient>
-            </defs>
-            <rect width="300" height="460" fill="oklch(0.14 0.02 60)"/>
-            <rect width="300" height="460" fill="url(#phgrid)"/>
-            <rect width="300" height="460" fill="url(#phglow)"/>
-            {/* terrain blobs */}
-            <ellipse cx="60" cy="360" rx="58" ry="22" fill="oklch(0.18 0.02 50)"/>
-            <ellipse cx="230" cy="110" rx="70" ry="26" fill="oklch(0.18 0.02 50)"/>
-            <ellipse cx="160" cy="230" rx="40" ry="14" fill="oklch(0.20 0.03 70)"/>
-            {/* objective */}
-            <circle cx="160" cy="230" r="10" fill="none" stroke="oklch(0.85 0.16 75)" strokeWidth="1.5" strokeDasharray="3 3"/>
-            <circle cx="160" cy="230" r="3" fill="oklch(0.85 0.16 75)"/>
-            {/* faction markers — Vanguard (you) */}
-            <g>
-              {[[80,330],[100,340],[90,310],[120,320],[105,295]].map(([x,y],i)=>(
-                <circle key={'v'+i} cx={x} cy={y} r="5" fill="oklch(0.78 0.17 75)" stroke="oklch(0.20 0.05 60)" strokeWidth="1"/>
-              ))}
-              <path d="M70 285 L130 285 L130 350 L70 350 Z" fill="none" stroke="oklch(0.78 0.17 75 / 0.5)" strokeWidth="1" strokeDasharray="2 2"/>
-            </g>
-            {/* enemy — Hive */}
-            <g>
-              {[[210,150],[230,140],[250,160],[225,170],[200,135],[245,130]].map(([x,y],i)=>(
-                <circle key={'h'+i} cx={x} cy={y} r="4" fill="oklch(0.78 0.18 145)"/>
-              ))}
-            </g>
-            {/* engagement line */}
-            <path d="M120 290 Q150 250 200 170" fill="none" stroke="oklch(0.85 0.16 75 / 0.6)" strokeWidth="1" strokeDasharray="4 3"/>
-            {/* selected ring */}
-            <circle cx="100" cy="320" r="22" fill="none" stroke="oklch(0.85 0.16 75)" strokeWidth="1" opacity="0.7"/>
-          </svg>
-          {/* unit health bars */}
-          <div className="ph-bars">
-            <div className="ph-bar"><span>VG-α</span><i style={{width: hp.a + '%'}}/></div>
-            <div className="ph-bar"><span>VG-β</span><i style={{width: hp.b + '%'}}/></div>
-            <div className="ph-bar enemy"><span>HV-Δ</span><i style={{width: hp.c + '%'}}/></div>
-          </div>
-          {/* mini-map */}
-          <div className="ph-mini">
-            <span className="mm-dot" style={{left:'20%',top:'70%',background:'oklch(0.78 0.17 75)'}}/>
-            <span className="mm-dot" style={{left:'72%',top:'28%',background:'oklch(0.78 0.18 145)'}}/>
-            <span className="mm-dot" style={{left:'48%',top:'50%',background:'oklch(0.85 0.16 75)'}}/>
-          </div>
-          {/* resource bar */}
-          <div className="ph-top mono"><span>◆ 1,240</span><span>▲ 18/24</span><span>⌬ 3</span></div>
-        </div>
-        {/* ability dock */}
-        <div className="ph-dock">
-          <button className="ph-ab"><span>Q</span><em>Rally</em></button>
-          <button className="ph-ab hot"><span>W</span><em>Strike</em></button>
-          <button className="ph-ab"><span>E</span><em>Smoke</em></button>
-          <button className="ph-ab"><span>R</span><em>Drop</em></button>
-        </div>
-      </div>
-      <div className="phone-glare" />
-    </div>
-  );
-};
-
-/* ---------- Hero ---------- */
-const Hero = () => {
-  const [time, setTime] = useState(20 * 60);
-  useEffect(() => {
-    const id = setInterval(() => setTime(t => (t <= 0 ? 20 * 60 : t - 1)), 1000);
-    return () => clearInterval(id);
-  }, []);
-  const mm = String(Math.floor(time / 60)).padStart(2, '0');
-  const ss = String(time % 60).padStart(2, '0');
-
-  return (
-    <section className="hero" id="top">
-      <div className="hero-frame">
-        <Soldier />
-
-        <div className="hero-overlay hero-overlay-grid">
-          <div className="hero-copy">
-            <div className="hero-tag">
-              <span className="dot" /> EARLY ACCESS · iOS · BUILD 0.7.4-CB
-            </div>
-
-            <h1 className="hero-title">
-              <span className="hero-line-1">Command your army.</span>
-              <span className="hero-line-1">Go through hell.</span>
-              <span className="hero-line-2">Come back <em>victorious.</em></span>
-            </h1>
-
-            <p className="hero-sub">
-              A faction-based mobile RTS for iOS. Fast battles. Readable units.
-              Real-time tactical decisions — in three to five minutes flat.
-            </p>
-
-            <div className="hero-actions">
-              <a href="#access" className="btn btn-primary">
-                Get Early Access <Glyph.arrow width="18" height="18"/>
-              </a>
-              <a href="#factions" className="btn btn-ghost">Choose Your Faction</a>
-            </div>
-
-            <div className="hero-meta">
-              <div className="meta-cell">
-                <span className="meta-k">SESSION</span>
-                <span className="meta-v">3–5 min</span>
-              </div>
-              <div className="meta-cell">
-                <span className="meta-k">FACTIONS</span>
-                <span className="meta-v">03</span>
-              </div>
-              <div className="meta-cell">
-                <span className="meta-k">PLATFORM</span>
-                <span className="meta-v">iOS</span>
-              </div>
-              <div className="meta-cell">
-                <span className="meta-k">MATCH CLOCK</span>
-                <span className="meta-v mono">{mm}:{ss}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="hero-phone-wrap">
-            <PhoneMockup />
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
 
 /* ---------- Marquee ---------- */
 const Marquee = () => {
@@ -258,7 +100,7 @@ const FactionsSection = () => (
       <p className="faction-decision-q">Which faction would you command?</p>
       <div className="faction-decision-btns">
         {FACTIONS.map(f => (
-          <a key={f.key} href="#access"
+          <a key={f.key} href="#early-access"
              className="btn btn-ghost faction-decision-btn"
              style={{ '--accent': f.color }}
              data-faction={f.key}>
@@ -363,7 +205,7 @@ const CTASection = () => {
   };
 
   return (
-    <section className="cta" id="access">
+    <section className="cta" id="early-access">
       <div className="cta-frame">
         <div className="cta-corner tl"/>
         <div className="cta-corner tr"/>
@@ -512,7 +354,7 @@ const App = () => {
   return (
     <>
       <Nav/>
-      <Hero/>
+      <CinematicHero/>
       <FactionsSection/>
       <MobileGameplaySection/>
       <StrategySection/>
