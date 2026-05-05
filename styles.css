@@ -157,7 +157,22 @@ body::before {
   transform: translate(-50%, -50%) rotateX(72deg);
 }
 
-/* Rotator wraps the figure so it spins in 3D */
+/* 3D canvas mount for the Three.js soldier */
+.soldier-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  display: block;
+}
+.soldier-canvas canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  filter: drop-shadow(0 24px 36px oklch(0 0 0 / 0.6));
+}
+
+/* Legacy CSS turntable (kept harmless; canvas now renders the figure) */
 .soldier-turntable {
   position: absolute;
   left: 50%; bottom: 12%;
