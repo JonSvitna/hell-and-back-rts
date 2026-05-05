@@ -601,3 +601,242 @@ section { position: relative; z-index: 1; }
   .foot-inner { grid-template-columns: 1fr; }
   .foot-meta { justify-self: start; text-align: left; }
 }
+
+/* =========================================================
+   UPGRADE: hero phone mockup, faction decision CTA,
+   mobile-promise cards, strategy split panels.
+========================================================= */
+
+/* ---------- Hero two-column overlay ---------- */
+.hero-overlay-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr);
+  gap: 36px;
+  align-items: center;
+  max-width: none;
+  width: 100%;
+  padding: 56px 56px;
+}
+.hero-copy { max-width: 640px; pointer-events: auto; }
+.hero-phone-wrap {
+  display: flex; justify-content: center; align-items: center;
+  pointer-events: auto;
+}
+@media (max-width: 1024px) {
+  .hero-overlay-grid { grid-template-columns: 1fr; padding: 40px 28px; gap: 28px; }
+  .hero-phone-wrap { order: -1; transform: scale(0.92); }
+}
+@media (max-width: 600px) {
+  .hero-overlay-grid { padding: 28px 16px; }
+  .hero-phone-wrap { transform: scale(0.78); margin: -32px 0; }
+}
+
+/* ---------- iPhone mockup ---------- */
+.phone {
+  position: relative;
+  width: 280px; height: 580px;
+  background: linear-gradient(160deg, #1a1c22 0%, #0a0b0f 100%);
+  border-radius: 44px;
+  padding: 12px;
+  box-shadow:
+    0 0 0 2px oklch(0.30 0.01 260),
+    0 30px 60px oklch(0 0 0 / 0.6),
+    0 0 80px var(--accent-soft);
+}
+.phone-notch {
+  position: absolute; top: 18px; left: 50%;
+  transform: translateX(-50%);
+  width: 110px; height: 28px;
+  background: #000; border-radius: 16px;
+  z-index: 3;
+}
+.phone-screen {
+  width: 100%; height: 100%;
+  background: #060709;
+  border-radius: 32px;
+  overflow: hidden;
+  position: relative;
+  display: flex; flex-direction: column;
+}
+.phone-glare {
+  position: absolute; inset: 0;
+  border-radius: 44px;
+  background: linear-gradient(135deg, oklch(1 0 0 / 0.06) 0%, transparent 40%, transparent 60%, oklch(1 0 0 / 0.04) 100%);
+  pointer-events: none;
+}
+.ph-status {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 22px 6px;
+  font-size: 9px; letter-spacing: 0.1em; color: var(--fg-1);
+  margin-top: 18px;
+}
+.ph-status span:nth-child(2) { color: var(--accent); }
+.ph-field { position: relative; flex: 1; overflow: hidden; }
+.ph-map { width: 100%; height: 100%; display: block; }
+.ph-top {
+  position: absolute; top: 8px; left: 12px; right: 12px;
+  display: flex; justify-content: space-between;
+  font-size: 10px; letter-spacing: 0.1em; color: var(--accent);
+  background: oklch(0 0 0 / 0.5);
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+}
+.ph-bars {
+  position: absolute; left: 10px; right: 10px; bottom: 12px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.ph-bar {
+  display: grid; grid-template-columns: 38px 1fr; align-items: center; gap: 6px;
+  font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.08em;
+  color: var(--fg-1);
+  background: oklch(0 0 0 / 0.5);
+  padding: 3px 6px;
+}
+.ph-bar i {
+  display: block; height: 4px;
+  background: oklch(0.78 0.17 75);
+  box-shadow: 0 0 8px oklch(0.78 0.17 75 / 0.5);
+}
+.ph-bar.enemy i { background: oklch(0.78 0.18 145); box-shadow: 0 0 8px oklch(0.78 0.18 145 / 0.5); }
+.ph-mini {
+  position: absolute; top: 8px; right: 12px;
+  width: 60px; height: 60px;
+  background: oklch(0.10 0.02 60 / 0.85);
+  border: 1px solid var(--accent);
+  display: none; /* hidden on small screens; re-enabled below if needed */
+}
+.ph-mini .mm-dot { position: absolute; width: 4px; height: 4px; border-radius: 50%; }
+.ph-dock {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 6px; padding: 10px 12px 18px;
+  background: linear-gradient(to top, #050608, transparent);
+}
+.ph-ab {
+  background: oklch(0.14 0.01 260);
+  border: 1px solid var(--line);
+  color: var(--fg-1);
+  padding: 8px 4px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  font-family: var(--font-mono);
+  cursor: pointer;
+}
+.ph-ab span { font-size: 12px; color: var(--accent); font-weight: 700; }
+.ph-ab em { font-style: normal; font-size: 8px; letter-spacing: 0.1em; color: var(--fg-2); }
+.ph-ab.hot { border-color: var(--accent); box-shadow: 0 0 14px var(--accent-soft); }
+
+/* ---------- Hero title overrides for new 3-line headline ---------- */
+.hero-title { font-size: clamp(36px, 5.5vw, 78px); line-height: 0.98; }
+.hero-line-1 { display: block; color: var(--fg-0); }
+.hero-line-2 em { font-style: normal; color: var(--accent); text-shadow: 0 0 30px var(--accent-soft); }
+
+/* Reduce soldier scene visibility behind the copy/phone so text reads */
+.hero-overlay-grid::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 30% 50%, oklch(0 0 0 / 0.55), transparent 65%);
+  pointer-events: none;
+}
+
+/* ---------- Faction decision CTA ---------- */
+.faction-decision {
+  max-width: 1320px; margin: 56px auto 0;
+  padding: 40px 28px 8px;
+  text-align: center;
+  border-top: 1px solid var(--line);
+}
+.faction-decision-q {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 2.4vw, 28px);
+  letter-spacing: -0.01em;
+  margin: 0 0 22px;
+  color: var(--fg-0);
+}
+.faction-decision-btns {
+  display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;
+}
+.faction-decision-btn {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.faction-decision-btn:hover {
+  background: var(--accent);
+  color: var(--bg-0);
+}
+
+/* ---------- Mobile gameplay promise cards ---------- */
+.mobile-promise { padding-bottom: 80px; }
+.mp-grid {
+  max-width: 1320px; margin: 0 auto;
+  padding: 0 28px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+}
+@media (max-width: 1100px) { .mp-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 720px)  { .mp-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 460px)  { .mp-grid { grid-template-columns: 1fr; } }
+.mp-card {
+  position: relative;
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  padding: 22px 18px;
+  display: flex; flex-direction: column; gap: 8px;
+  transition: border-color .2s, transform .2s;
+}
+.mp-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.mp-num { font-size: 10px; letter-spacing: 0.18em; color: var(--fg-3); }
+.mp-icon { color: var(--accent); }
+.mp-card h3 { font-family: var(--font-display); font-size: 16px; margin: 4px 0 0; letter-spacing: -0.005em; }
+.mp-card p { color: var(--fg-1); font-size: 13px; line-height: 1.55; margin: 0; }
+
+/* ---------- Strategy: split-panel comparison ---------- */
+.strategy { padding-bottom: 80px; }
+.vs-wrap {
+  max-width: 1320px; margin: 0 auto;
+  padding: 0 28px;
+  display: grid;
+  grid-template-columns: 1fr 60px 1fr;
+  gap: 0;
+  align-items: stretch;
+}
+@media (max-width: 800px) {
+  .vs-wrap { grid-template-columns: 1fr; }
+  .vs-divider { display: none; }
+}
+.vs-panel {
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  padding: 32px 28px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.vs-old { border-color: oklch(0.40 0.05 30 / 0.55); }
+.vs-new { border-color: var(--accent); box-shadow: inset 0 0 40px var(--accent-soft); }
+.vs-label { font-size: 11px; letter-spacing: 0.2em; color: var(--fg-3); }
+.vs-new .vs-label { color: var(--accent); }
+.vs-panel ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.vs-panel li {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: 14px; line-height: 1.5; color: var(--fg-1);
+  padding: 10px 0;
+  border-top: 1px solid var(--line-soft);
+}
+.vs-panel li:first-child { border-top: 0; }
+.vs-x { color: oklch(0.70 0.16 30); flex-shrink: 0; margin-top: 1px; }
+.vs-check { color: var(--accent); font-size: 14px; line-height: 1.5; flex-shrink: 0; }
+.vs-divider {
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.2em;
+  color: var(--accent);
+  position: relative;
+}
+.vs-divider::before, .vs-divider::after {
+  content: ''; position: absolute; left: 50%; width: 1px;
+  background: var(--line); transform: translateX(-50%);
+}
+.vs-divider::before { top: 0; height: calc(50% - 18px); }
+.vs-divider::after  { bottom: 0; height: calc(50% - 18px); }
+.vs-divider span {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 1px solid var(--accent);
+  background: var(--bg-0);
+}

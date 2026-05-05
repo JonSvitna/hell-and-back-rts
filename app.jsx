@@ -50,8 +50,8 @@ const Nav = () => (
       </a>
       <ul className="nav-links">
         <li><a href="#factions">Factions</a></li>
-        <li><a href="#gameplay">Gameplay</a></li>
-        <li><a href="#anywhere">Anytime</a></li>
+        <li><a href="#mobile">Mobile</a></li>
+        <li><a href="#strategy">Strategy</a></li>
         <li><a href="#access">Early Access</a></li>
       </ul>
       <a href="#access" className="nav-cta">
@@ -60,6 +60,97 @@ const Nav = () => (
     </div>
   </nav>
 );
+
+/* ---------- iPhone gameplay mockup (pure CSS/SVG) ---------- */
+const PhoneMockup = () => {
+  const [hp, setHp] = useState({ a: 78, b: 64, c: 92 });
+  useEffect(() => {
+    const id = setInterval(() => {
+      setHp(h => ({
+        a: Math.max(20, Math.min(100, h.a + (Math.random()*10 - 5))),
+        b: Math.max(20, Math.min(100, h.b + (Math.random()*10 - 6))),
+        c: Math.max(20, Math.min(100, h.c + (Math.random()*10 - 4))),
+      }));
+    }, 1400);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <div className="phone" aria-hidden="true">
+      <div className="phone-notch" />
+      <div className="phone-screen">
+        {/* status bar */}
+        <div className="ph-status mono">
+          <span>9:41</span>
+          <span>● LIVE · 12:47</span>
+          <span>5G ▮▮▮</span>
+        </div>
+        {/* battlefield */}
+        <div className="ph-field">
+          <svg viewBox="0 0 300 460" preserveAspectRatio="xMidYMid slice" className="ph-map">
+            <defs>
+              <pattern id="phgrid" width="24" height="24" patternUnits="userSpaceOnUse">
+                <path d="M24 0H0V24" fill="none" stroke="oklch(0.4 0.04 80 / 0.25)" strokeWidth="0.5"/>
+              </pattern>
+              <radialGradient id="phglow" cx="0.5" cy="0.4" r="0.6">
+                <stop offset="0%" stopColor="oklch(0.4 0.1 80 / 0.4)"/>
+                <stop offset="100%" stopColor="transparent"/>
+              </radialGradient>
+            </defs>
+            <rect width="300" height="460" fill="oklch(0.14 0.02 60)"/>
+            <rect width="300" height="460" fill="url(#phgrid)"/>
+            <rect width="300" height="460" fill="url(#phglow)"/>
+            {/* terrain blobs */}
+            <ellipse cx="60" cy="360" rx="58" ry="22" fill="oklch(0.18 0.02 50)"/>
+            <ellipse cx="230" cy="110" rx="70" ry="26" fill="oklch(0.18 0.02 50)"/>
+            <ellipse cx="160" cy="230" rx="40" ry="14" fill="oklch(0.20 0.03 70)"/>
+            {/* objective */}
+            <circle cx="160" cy="230" r="10" fill="none" stroke="oklch(0.85 0.16 75)" strokeWidth="1.5" strokeDasharray="3 3"/>
+            <circle cx="160" cy="230" r="3" fill="oklch(0.85 0.16 75)"/>
+            {/* faction markers — Vanguard (you) */}
+            <g>
+              {[[80,330],[100,340],[90,310],[120,320],[105,295]].map(([x,y],i)=>(
+                <circle key={'v'+i} cx={x} cy={y} r="5" fill="oklch(0.78 0.17 75)" stroke="oklch(0.20 0.05 60)" strokeWidth="1"/>
+              ))}
+              <path d="M70 285 L130 285 L130 350 L70 350 Z" fill="none" stroke="oklch(0.78 0.17 75 / 0.5)" strokeWidth="1" strokeDasharray="2 2"/>
+            </g>
+            {/* enemy — Hive */}
+            <g>
+              {[[210,150],[230,140],[250,160],[225,170],[200,135],[245,130]].map(([x,y],i)=>(
+                <circle key={'h'+i} cx={x} cy={y} r="4" fill="oklch(0.78 0.18 145)"/>
+              ))}
+            </g>
+            {/* engagement line */}
+            <path d="M120 290 Q150 250 200 170" fill="none" stroke="oklch(0.85 0.16 75 / 0.6)" strokeWidth="1" strokeDasharray="4 3"/>
+            {/* selected ring */}
+            <circle cx="100" cy="320" r="22" fill="none" stroke="oklch(0.85 0.16 75)" strokeWidth="1" opacity="0.7"/>
+          </svg>
+          {/* unit health bars */}
+          <div className="ph-bars">
+            <div className="ph-bar"><span>VG-α</span><i style={{width: hp.a + '%'}}/></div>
+            <div className="ph-bar"><span>VG-β</span><i style={{width: hp.b + '%'}}/></div>
+            <div className="ph-bar enemy"><span>HV-Δ</span><i style={{width: hp.c + '%'}}/></div>
+          </div>
+          {/* mini-map */}
+          <div className="ph-mini">
+            <span className="mm-dot" style={{left:'20%',top:'70%',background:'oklch(0.78 0.17 75)'}}/>
+            <span className="mm-dot" style={{left:'72%',top:'28%',background:'oklch(0.78 0.18 145)'}}/>
+            <span className="mm-dot" style={{left:'48%',top:'50%',background:'oklch(0.85 0.16 75)'}}/>
+          </div>
+          {/* resource bar */}
+          <div className="ph-top mono"><span>◆ 1,240</span><span>▲ 18/24</span><span>⌬ 3</span></div>
+        </div>
+        {/* ability dock */}
+        <div className="ph-dock">
+          <button className="ph-ab"><span>Q</span><em>Rally</em></button>
+          <button className="ph-ab hot"><span>W</span><em>Strike</em></button>
+          <button className="ph-ab"><span>E</span><em>Smoke</em></button>
+          <button className="ph-ab"><span>R</span><em>Drop</em></button>
+        </div>
+      </div>
+      <div className="phone-glare" />
+    </div>
+  );
+};
 
 /* ---------- Hero ---------- */
 const Hero = () => {
@@ -76,45 +167,52 @@ const Hero = () => {
       <div className="hero-frame">
         <Soldier />
 
-        <div className="hero-overlay">
-          <div className="hero-tag">
-            <span className="dot" /> SIGNAL ACQUIRED · BROADCAST 2147.04
+        <div className="hero-overlay hero-overlay-grid">
+          <div className="hero-copy">
+            <div className="hero-tag">
+              <span className="dot" /> EARLY ACCESS · iOS · BUILD 0.7.4-CB
+            </div>
+
+            <h1 className="hero-title">
+              <span className="hero-line-1">COMMAND YOUR ARMY.</span>
+              <span className="hero-line-1">GO THROUGH HELL.</span>
+              <span className="hero-line-2">COME BACK <em>VICTORIOUS.</em></span>
+            </h1>
+
+            <p className="hero-sub">
+              Hell &amp; Back is a faction-based mobile RTS for iOS, built around
+              fast battles, readable units, and real-time tactical decisions.
+            </p>
+
+            <div className="hero-actions">
+              <a href="#access" className="btn btn-primary">
+                Get Early Access <Glyph.arrow width="18" height="18"/>
+              </a>
+              <a href="#factions" className="btn btn-ghost">Choose Your Faction</a>
+            </div>
+
+            <div className="hero-meta">
+              <div className="meta-cell">
+                <span className="meta-k">MATCH TIMER</span>
+                <span className="meta-v mono">{mm}:{ss}</span>
+              </div>
+              <div className="meta-cell">
+                <span className="meta-k">FACTIONS</span>
+                <span className="meta-v">03</span>
+              </div>
+              <div className="meta-cell">
+                <span className="meta-k">PLATFORM</span>
+                <span className="meta-v">iOS</span>
+              </div>
+              <div className="meta-cell">
+                <span className="meta-k">SESSION</span>
+                <span className="meta-v">3–5 MIN</span>
+              </div>
+            </div>
           </div>
 
-          <h1 className="hero-title">
-            <span className="hero-line-1">FROM HELL.</span>
-            <span className="hero-line-2">BACK IN <em>20.</em></span>
-          </h1>
-
-          <p className="hero-sub">
-            A mobile real-time strategy game built for short, brutal matches.
-            Three factions. Twenty minutes. One commander walks off the rock.
-          </p>
-
-          <div className="hero-actions">
-            <a href="#access" className="btn btn-primary">
-              Request Early Access <Glyph.arrow width="18" height="18"/>
-            </a>
-            <a href="#factions" className="btn btn-ghost">Meet the Factions</a>
-          </div>
-
-          <div className="hero-meta">
-            <div className="meta-cell">
-              <span className="meta-k">MATCH TIMER</span>
-              <span className="meta-v mono">{mm}:{ss}</span>
-            </div>
-            <div className="meta-cell">
-              <span className="meta-k">FACTIONS</span>
-              <span className="meta-v">03</span>
-            </div>
-            <div className="meta-cell">
-              <span className="meta-k">PLATFORM</span>
-              <span className="meta-v">iOS · Android</span>
-            </div>
-            <div className="meta-cell">
-              <span className="meta-k">BUILD</span>
-              <span className="meta-v mono">0.7.4-CB</span>
-            </div>
+          <div className="hero-phone-wrap">
+            <PhoneMockup />
           </div>
         </div>
 
@@ -149,11 +247,11 @@ const Marquee = () => {
 const FactionsSection = () => (
   <section className="factions" id="factions">
     <header className="section-head">
-      <div className="section-eyebrow">// SECTION 02 — FORCES IN PLAY</div>
-      <h2 className="section-title">Three doctrines.<br/>One twenty-minute window.</h2>
+      <div className="section-eyebrow">// SECTION 02 — CHOOSE YOUR SIDE</div>
+      <h2 className="section-title">Choose Your<br/>Command Style.</h2>
       <p className="section-lede">
-        Every match is a clean, asymmetric matchup. Pick the doctrine that fits
-        the way you think under pressure — then live with it for twenty minutes.
+        Three factions. No mirror matches. No safe choices. Every army changes
+        how you fight.
       </p>
     </header>
 
@@ -161,111 +259,90 @@ const FactionsSection = () => (
       {FACTIONS.map((f, i) => <FactionCard key={f.key} f={f} idx={i}/>)}
     </div>
 
-    <div className="faction-note mono">
-      ◤ ASYMMETRY · NO MIRROR MATCHES · BALANCE PASS WEEKLY ◥
+    <div className="faction-decision">
+      <p className="faction-decision-q">Which faction would you command?</p>
+      <div className="faction-decision-btns">
+        {FACTIONS.map(f => (
+          <a key={f.key} href="#access"
+             className="btn btn-ghost faction-decision-btn"
+             style={{ '--accent': f.color }}
+             data-faction={f.key}>
+            I command {f.name}
+          </a>
+        ))}
+      </div>
     </div>
   </section>
 );
 
-/* ---------- Gameplay (Quick & Strategic) ---------- */
-const GameplaySection = () => (
-  <section className="gameplay" id="gameplay">
+/* ---------- Mobile Gameplay Promise ---------- */
+const MOBILE_CARDS = [
+  { n: '01', t: '3–5 Minute Battles', d: 'Tight matches that respect your time. Open, fight, win, rematch.', I: Glyph.clock },
+  { n: '02', t: 'Clean Unit Readability', d: 'Faction colors, silhouettes, and HUD built for a phone screen — not a 27" monitor.', I: Glyph.signal },
+  { n: '03', t: 'Tap & Drag Control', d: 'Tap to command. Drag to reposition. Trigger abilities with your thumb.', I: Glyph.bolt },
+  { n: '04', t: 'Tactical Abilities', d: 'Real-time abilities with meaningful cooldowns. Outplay, don’t outclick.', I: Glyph.cross },
+  { n: '05', t: 'Faction-Based Counters', d: 'Every army has a clear identity. Reads matter more than reflex.', I: Glyph.device },
+];
+
+const MobileGameplaySection = () => (
+  <section className="mobile-promise" id="mobile">
     <header className="section-head">
-      <div className="section-eyebrow">// SECTION 03 — DESIGN PILLARS</div>
-      <h2 className="section-title">Quick. Strategic.<br/>No 90-minute slogs.</h2>
+      <div className="section-eyebrow">// SECTION 03 — BUILT FOR iOS</div>
+      <h2 className="section-title">Built for Your Thumb,<br/>Not a Keyboard.</h2>
       <p className="section-lede">
-        Every system is tuned around a single rule: you should be able to play
-        a real, satisfying RTS match on a lunch break.
+        Tap to command. Drag to reposition. Trigger abilities in real time.
+        Every decision is built for fast mobile battles without losing the RTS
+        feeling.
       </p>
     </header>
 
-    <div className="pillar-grid">
-      <article className="pillar wide">
-        <div className="pillar-num mono">P · 01</div>
-        <Glyph.clock className="pillar-icon" width="36" height="36"/>
-        <h3>20 minutes, hard cap.</h3>
-        <p>
-          Match clock starts at <span className="mono hl">20:00</span> and never
-          stops. At zero, the map collapses to a contested core — whoever holds
-          it walks. No turtling. No drawn-out late games.
-        </p>
-        <div className="pillar-bar">
-          <span className="pillar-bar-fill" style={{width: '100%'}}/>
-          <span className="pillar-bar-mark" style={{left: '25%'}}>5:00 · scout</span>
-          <span className="pillar-bar-mark" style={{left: '55%'}}>11:00 · push</span>
-          <span className="pillar-bar-mark" style={{left: '85%'}}>17:00 · core</span>
-        </div>
-      </article>
-
-      <article className="pillar">
-        <div className="pillar-num mono">P · 02</div>
-        <Glyph.bolt className="pillar-icon" width="36" height="36"/>
-        <h3>One-thumb commands.</h3>
-        <p>
-          Drag to select. Flick to send. Long-press to give a unit a posture.
-          A full battlegroup, controlled with one hand on the train.
-        </p>
-      </article>
-
-      <article className="pillar">
-        <div className="pillar-num mono">P · 03</div>
-        <Glyph.signal className="pillar-icon" width="36" height="36"/>
-        <h3>Strategy, not APM.</h3>
-        <p>
-          Decisions matter more than fingers. Macro choices auto-resolve at the
-          unit level so you can focus on the read, not the click count.
-        </p>
-      </article>
-
-      <article className="pillar wide">
-        <div className="pillar-num mono">P · 04</div>
-        <Glyph.device className="pillar-icon" width="36" height="36"/>
-        <h3>Anytime. Anywhere.</h3>
-        <p>
-          Cross-save between phone and tablet. Resume a match where you left it.
-          Spectate from any device — even a browser. Your ladder rank follows
-          your account, not your hardware.
-        </p>
-        <div className="pillar-devices">
-          <div className="device phone">
-            <div className="device-screen">
-              <div className="device-line w70"/><div className="device-line w40"/>
-              <div className="device-grid">
-                <span/><span/><span/><span className="hot"/><span/><span/>
-              </div>
-              <div className="device-line w55"/>
-            </div>
-          </div>
-          <div className="device tablet">
-            <div className="device-screen">
-              <div className="device-line w40"/>
-              <div className="device-grid wide">
-                <span/><span className="hot"/><span/><span/><span/><span/>
-                <span/><span/><span/><span/><span className="hot"/><span/>
-              </div>
-              <div className="device-line w70"/>
-            </div>
-          </div>
-        </div>
-      </article>
+    <div className="mp-grid">
+      {MOBILE_CARDS.map(c => (
+        <article key={c.n} className="mp-card">
+          <div className="mp-num mono">M · {c.n}</div>
+          <c.I className="mp-icon" width="28" height="28"/>
+          <h3>{c.t}</h3>
+          <p>{c.d}</p>
+        </article>
+      ))}
     </div>
   </section>
 );
 
-/* ---------- Anywhere strip ---------- */
-const AnywhereStrip = () => (
-  <section className="anywhere" id="anywhere">
-    <div className="anywhere-grid">
-      <div>
-        <div className="section-eyebrow">// SECTION 04 — FIELD CONDITIONS</div>
-        <h2 className="section-title">Five minutes free?<br/>That's a war.</h2>
+/* ---------- Strategy Without Waiting ---------- */
+const StrategySection = () => (
+  <section className="strategy" id="strategy">
+    <header className="section-head">
+      <div className="section-eyebrow">// SECTION 04 — REAL STRATEGY</div>
+      <h2 className="section-title">Strategy Without<br/>the Waiting Game.</h2>
+      <p className="section-lede">
+        Hell &amp; Back is designed for players who want tactical decisions
+        now — not timers, clutter, or endless base menus.
+      </p>
+    </header>
+
+    <div className="vs-wrap">
+      <div className="vs-panel vs-old">
+        <div className="vs-label mono">// LEGACY MOBILE STRATEGY</div>
+        <ul>
+          <li><Glyph.cross className="vs-x" width="18" height="18"/> Build timers that punish closing the app</li>
+          <li><Glyph.cross className="vs-x" width="18" height="18"/> Bloated economy &amp; resource menus</li>
+          <li><Glyph.cross className="vs-x" width="18" height="18"/> Passive waiting loops disguised as gameplay</li>
+          <li><Glyph.cross className="vs-x" width="18" height="18"/> Cluttered HUD optimized for tablets only</li>
+          <li><Glyph.cross className="vs-x" width="18" height="18"/> Faction “identity” that’s really just stat tweaks</li>
+        </ul>
       </div>
-      <ul className="anywhere-list">
-        <li><span className="mono">07:42</span> Subway commute — ranked 1v1</li>
-        <li><span className="mono">12:15</span> Lunch break — 2v2 with the team</li>
-        <li><span className="mono">19:08</span> Couch — tablet, casted match</li>
-        <li><span className="mono">23:51</span> Last call — one more game, just one</li>
-      </ul>
+      <div className="vs-divider" aria-hidden="true"><span>VS</span></div>
+      <div className="vs-panel vs-new">
+        <div className="vs-label mono">// HELL &amp; BACK</div>
+        <ul>
+          <li><span className="vs-check">◆</span> Fast 3–5 minute matches</li>
+          <li><span className="vs-check">◆</span> No bloated economy screens</li>
+          <li><span className="vs-check">◆</span> No passive waiting loops</li>
+          <li><span className="vs-check">◆</span> Readable battlefield design</li>
+          <li><span className="vs-check">◆</span> Every faction has a clear identity</li>
+        </ul>
+      </div>
     </div>
   </section>
 );
@@ -285,6 +362,8 @@ const CTASection = () => {
       return;
     }
     setError('');
+    // TODO: wire to Klaviyo / Supabase / ConvertKit / Vercel serverless route.
+    // For now this is frontend-only and does not persist email anywhere.
     setSubmitted(true);
   };
 
@@ -296,15 +375,15 @@ const CTASection = () => {
         <div className="cta-corner bl"/>
         <div className="cta-corner br"/>
 
-        <div className="cta-eyebrow mono">▣ TRANSMISSION · ENLISTMENT FORM 0-7</div>
+        <div className="cta-eyebrow mono">▣ EARLY ACCESS · ENLISTMENT FORM 0-7</div>
 
         <h2 className="cta-title">
-          The first wave deploys soon.<br/>
-          <span className="cta-hl">Be on it.</span>
+          Be First to Go to<br/>
+          <span className="cta-hl">Hell &amp; Back.</span>
         </h2>
         <p className="cta-sub">
-          Get a closed beta key, weekly dev briefings, and a unique commander
-          callsign reserved to your account.
+          Join the early access list for faction reveals, development updates,
+          and iOS playtest opportunities.
         </p>
 
         {!submitted ? (
@@ -439,10 +518,9 @@ const App = () => {
     <>
       <Nav/>
       <Hero/>
-      <Marquee/>
       <FactionsSection/>
-      <GameplaySection/>
-      <AnywhereStrip/>
+      <MobileGameplaySection/>
+      <StrategySection/>
       <CTASection/>
       <Footer/>
       <Tweaks tweaks={tweaks} setTweak={setTweak}/>
