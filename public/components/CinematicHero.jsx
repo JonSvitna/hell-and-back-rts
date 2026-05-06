@@ -3,18 +3,18 @@ const { useCallback, useEffect, useMemo, useRef, useState } = React;
 const SCENES = [
   {
     src: '/videos/war-begins.mp4',
-    title: 'Command the Battle.',
-    subtitle: 'Three factions. One battlefield. Total war begins now.',
+    title: 'FROM HELL.',
+    subtitle: 'Three factions. One objective. Twenty minutes to decide the war.',
   },
   {
     src: '/videos/swarm-arrives.mp4',
-    title: 'Survive the Swarm.',
-    subtitle: 'Overwhelming forces collide with tactical command.',
+    title: 'THE SWARM ARRIVES.',
+    subtitle: 'Overwhelming numbers. Fragile as glass. Fast as fire.',
   },
   {
     src: '/videos/final-convergence.mp4',
-    title: 'Rewrite the War.',
-    subtitle: 'Discipline. Chaos. Precision.',
+    title: 'BACK IN 20.',
+    subtitle: 'No turtling. No late games. One commander walks off the rock.',
   },
 ];
 
@@ -29,7 +29,7 @@ function CinematicHero() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [nextIndex, setNextIndex] = useState(1);
   const [isFading, setIsFading] = useState(false);
-  const [visibleLayer, setVisibleLayer] = useState(0); // 0 | 1
+  const [visibleLayer, setVisibleLayer] = useState(0);
   const [layerSources, setLayerSources] = useState([SCENES[0].src, SCENES[1].src]);
 
   const videoRefs = useRef([null, null]);
@@ -40,17 +40,12 @@ function CinematicHero() {
   const visibleLayerRef = useRef(visibleLayer);
   const isFadingRef = useRef(isFading);
 
-  useEffect(() => {
-    activeIndexRef.current = activeIndex;
-  }, [activeIndex]);
-  useEffect(() => {
-    visibleLayerRef.current = visibleLayer;
-  }, [visibleLayer]);
-  useEffect(() => {
-    isFadingRef.current = isFading;
-  }, [isFading]);
+  useEffect(() => { activeIndexRef.current = activeIndex; }, [activeIndex]);
+  useEffect(() => { visibleLayerRef.current = visibleLayer; }, [visibleLayer]);
+  useEffect(() => { isFadingRef.current = isFading; }, [isFading]);
 
   const scene = useMemo(() => SCENES[activeIndex], [activeIndex]);
+  const sceneNum = (isFading ? nextIndex : activeIndex) + 1;
 
   const ensureVideoReady = useCallback(async (video) => {
     if (!video) return;
@@ -86,12 +81,8 @@ function CinematicHero() {
       v.load();
       return v;
     });
-
     return () => {
-      preloaders.forEach((v) => {
-        v.pause();
-        v.src = '';
-      });
+      preloaders.forEach((v) => { v.pause(); v.src = ''; });
     };
   }, []);
 
@@ -127,9 +118,7 @@ function CinematicHero() {
           setIsFading(true);
           isFadingRef.current = true;
 
-          if (fadeTimeoutRef.current) {
-            window.clearTimeout(fadeTimeoutRef.current);
-          }
+          if (fadeTimeoutRef.current) window.clearTimeout(fadeTimeoutRef.current);
 
           fadeTimeoutRef.current = window.setTimeout(() => {
             setActiveIndex(upcoming);
@@ -144,22 +133,15 @@ function CinematicHero() {
     }, ROTATE_MS);
 
     return () => {
-      if (rotationIntervalRef.current) {
-        window.clearInterval(rotationIntervalRef.current);
-      }
-      if (fadeTimeoutRef.current) {
-        window.clearTimeout(fadeTimeoutRef.current);
-      }
+      if (rotationIntervalRef.current) window.clearInterval(rotationIntervalRef.current);
+      if (fadeTimeoutRef.current) window.clearTimeout(fadeTimeoutRef.current);
     };
   }, [ensureVideoReady]);
 
   const layerOpacity = (layer) => {
-    if (!isFading) {
-      return layer === visibleLayer ? 'opacity-100' : 'opacity-0';
-    }
+    if (!isFading) return layer === visibleLayer ? 'opacity-100' : 'opacity-0';
     const hiddenLayer = visibleLayer === 0 ? 1 : 0;
-    if (layer === hiddenLayer) return 'opacity-100';
-    return 'opacity-0';
+    return layer === hiddenLayer ? 'opacity-100' : 'opacity-0';
   };
 
   const layerScale = (layer) => {
@@ -172,71 +154,81 @@ function CinematicHero() {
   };
 
   return (
-    <section className="relative min-h-screen w-full overflow-hidden bg-black" id="top">
+    <section className="cinematic-hero relative w-full overflow-hidden bg-black" id="top">
+
+      {/* Video layers */}
       <div className="absolute inset-0">
         <video
-          ref={(el) => {
-            videoRefs.current[0] = el;
-          }}
-          className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-1000 ease-in-out ${layerOpacity(
-            0,
-          )} ${layerScale(0)}`}
+          ref={(el) => { videoRefs.current[0] = el; }}
+          className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-1000 ease-in-out ${layerOpacity(0)} ${layerScale(0)}`}
           src={layerSources[0]}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
+          autoPlay muted loop playsInline preload="auto"
           aria-hidden="true"
         />
         <video
-          ref={(el) => {
-            videoRefs.current[1] = el;
-          }}
-          className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-1000 ease-in-out ${layerOpacity(
-            1,
-          )} ${layerScale(1)}`}
+          ref={(el) => { videoRefs.current[1] = el; }}
+          className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-1000 ease-in-out ${layerOpacity(1)} ${layerScale(1)}`}
           src={layerSources[1]}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
+          autoPlay muted loop playsInline preload="auto"
           aria-hidden="true"
         />
       </div>
 
-      <div className="pointer-events-none absolute inset-0 bg-black/50" />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-black/60" />
+      {/* Scanlines — hidden by :root.no-scan */}
+      <div className="cinematic-scanlines pointer-events-none absolute inset-0" aria-hidden="true" />
 
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl items-center px-6 py-20 sm:px-10 lg:px-16">
-        <div className="max-w-2xl text-left text-white">
-          <p className="mb-3 text-xs uppercase tracking-[0.35em] text-white/70">
-            Scene {isFading ? nextIndex + 1 : activeIndex + 1}
-          </p>
-          <h1 className="text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl">
-            {scene.title}
-          </h1>
-          <p className="mt-5 text-base text-white/90 sm:text-lg lg:text-xl">
-            {scene.subtitle}
-          </p>
+      {/* Directional gradients — left for readability, bottom to blend into next section */}
+      <div className="cinematic-grad-left pointer-events-none absolute inset-0" />
+      <div className="cinematic-grad-bottom pointer-events-none absolute inset-0" />
 
-          <div className="mt-10 flex flex-wrap gap-4">
-            <a
-              href="#early-access"
-              className="inline-flex items-center justify-center rounded-md bg-white px-6 py-3 text-sm font-semibold text-black transition-colors duration-200 hover:bg-white/90"
-            >
-              Join Early Access
-            </a>
-            <a
-              href="#factions"
-              className="inline-flex items-center justify-center rounded-md border border-white/50 bg-white/5 px-6 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-colors duration-200 hover:bg-white/15"
-            >
-              View Factions
-            </a>
+      {/* HUD corner brackets — hidden by :root.no-corners */}
+      <div className="cinematic-corner tl" aria-hidden="true" />
+      <div className="cinematic-corner tr" aria-hidden="true" />
+      <div className="cinematic-corner bl" aria-hidden="true" />
+      <div className="cinematic-corner br" aria-hidden="true" />
+
+      {/* Overlay content */}
+      <div className="cinematic-content relative">
+        <div className="cinematic-content-inner">
+
+          {/* HUD scene indicator with progress bar */}
+          <div className="cinematic-hud-label">
+            <span>◤ BROADCAST {sceneNum}/{SCENES.length} · LIVE</span>
+            <div className="cinematic-progress-track">
+              <div
+                key={activeIndex}
+                className="cinematic-progress-fill"
+                style={{ animationDuration: ROTATE_MS + 'ms' }}
+              />
+            </div>
           </div>
+
+          {/* Scene title */}
+          <h1 className="cinematic-title">{scene.title}</h1>
+
+          {/* Scene subtitle */}
+          <p className="cinematic-subtitle">{scene.subtitle}</p>
+
+          {/* CTAs — reuse site button classes for visual consistency */}
+          <div className="hero-actions">
+            <a href="#early-access" className="btn btn-primary">
+              Request Early Access
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="18" height="18">
+                <path d="M5 12h14M13 6l6 6-6 6"/>
+              </svg>
+            </a>
+            <a href="#factions" className="btn btn-ghost">Meet the Factions</a>
+          </div>
+
         </div>
       </div>
+
+      {/* Scroll indicator */}
+      <div className="hero-scroll" style={{ zIndex: 10 }}>
+        <span>SCROLL</span>
+        <span className="hero-scroll-line" />
+      </div>
+
     </section>
   );
 }

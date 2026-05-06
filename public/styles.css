@@ -844,3 +844,101 @@ section { position: relative; z-index: 1; }
   border: 1px solid var(--accent);
   background: var(--bg-0);
 }
+
+/* ---------- CinematicHero ---------- */
+.cinematic-hero { min-height: 100dvh; }
+
+.cinematic-scanlines {
+  background: repeating-linear-gradient(0deg, transparent 0 3px, oklch(0 0 0 / 0.18) 3px 4px);
+  opacity: 0.45;
+  z-index: 1;
+}
+:root.no-scan .cinematic-scanlines { display: none; }
+
+.cinematic-grad-left {
+  background: linear-gradient(to right, oklch(0 0 0 / 0.82) 0%, oklch(0 0 0 / 0.45) 42%, oklch(0 0 0 / 0.15) 100%);
+  z-index: 2;
+}
+.cinematic-grad-bottom {
+  background: linear-gradient(to top, oklch(0 0 0 / 0.80) 0%, transparent 40%);
+  z-index: 2;
+}
+
+.cinematic-corner {
+  position: absolute;
+  width: 20px; height: 20px;
+  border-color: var(--accent);
+  border-style: solid; border-width: 0;
+  z-index: 11; pointer-events: none;
+}
+.cinematic-corner.tl { top: 20px; left: 20px; border-top-width: 2px; border-left-width: 2px; }
+.cinematic-corner.tr { top: 20px; right: 20px; border-top-width: 2px; border-right-width: 2px; }
+.cinematic-corner.bl { bottom: 20px; left: 20px; border-bottom-width: 2px; border-left-width: 2px; }
+.cinematic-corner.br { bottom: 20px; right: 20px; border-bottom-width: 2px; border-right-width: 2px; }
+:root.no-corners .cinematic-corner { display: none; }
+
+.cinematic-content {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  z-index: 10;
+  padding: clamp(32px, 5vw, 80px);
+}
+.cinematic-content-inner { max-width: 620px; }
+
+.cinematic-hud-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+  margin-bottom: 22px;
+  opacity: 0.9;
+}
+.cinematic-progress-track {
+  margin-top: 8px;
+  height: 2px;
+  background: oklch(1 0 0 / 0.15);
+  overflow: hidden;
+}
+.cinematic-progress-fill {
+  height: 100%;
+  width: 100%;
+  background: var(--accent);
+  transform-origin: left;
+  animation: cinemaProgressFill linear forwards;
+}
+@keyframes cinemaProgressFill {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+.cinematic-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(52px, 7vw, 108px);
+  line-height: 0.92;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  color: var(--fg-0);
+  margin: 0 0 20px;
+  text-wrap: balance;
+}
+
+.cinematic-subtitle {
+  font-family: var(--font-body);
+  font-size: clamp(15px, 1.4vw, 18px);
+  line-height: 1.55;
+  color: oklch(1 0 0 / 0.72);
+  margin: 0 0 36px;
+  max-width: 480px;
+  text-wrap: pretty;
+}
+
+@media (max-width: 720px) {
+  .cinematic-content { padding: 24px 18px; }
+  .cinematic-corner { width: 14px; height: 14px; }
+  .cinematic-corner.tl { top: 12px; left: 12px; }
+  .cinematic-corner.tr { top: 12px; right: 12px; }
+  .cinematic-corner.bl { bottom: 12px; left: 12px; }
+  .cinematic-corner.br { bottom: 12px; right: 12px; }
+}

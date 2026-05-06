@@ -9,18 +9,18 @@ type Scene = {
 const SCENES: Scene[] = [
   {
     src: '/videos/war-begins.mp4',
-    title: 'Command the Battle.',
-    subtitle: 'Three factions. One battlefield. Total war begins now.',
+    title: 'FROM HELL.',
+    subtitle: 'Three factions. One objective. Twenty minutes to decide the war.',
   },
   {
     src: '/videos/swarm-arrives.mp4',
-    title: 'Survive the Swarm.',
-    subtitle: 'Overwhelming forces collide with tactical command.',
+    title: 'THE SWARM ARRIVES.',
+    subtitle: 'Overwhelming numbers. Fragile as glass. Fast as fire.',
   },
   {
     src: '/videos/final-convergence.mp4',
-    title: 'Rewrite the War.',
-    subtitle: 'Discipline. Chaos. Precision.',
+    title: 'BACK IN 20.',
+    subtitle: 'No turtling. No late games. One commander walks off the rock.',
   },
 ];
 
