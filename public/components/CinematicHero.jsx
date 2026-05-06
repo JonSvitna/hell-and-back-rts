@@ -26,101 +26,128 @@ const SCENES = [
 ];
 
 const ROTATE_MS = 6000;
-const FADE_MS = 1000;
+const FADE_MS   = 1000;
 
-/** Autoplay-safe priming for iOS/Safari/Chrome muted inline policy */
 function primeVideoEl(video) {
   if (!video) return;
-  video.muted = true;
+  video.muted        = true;
   video.defaultMuted = true;
-  video.volume = 0;
-  video.playsInline = true;
-  video.preload = 'auto';
-  video.setAttribute('muted', '');
-  video.setAttribute('playsinline', '');
+  video.volume       = 0;
+  video.playsInline  = true;
+  video.preload      = 'auto';
+  video.setAttribute('muted',            '');
+  video.setAttribute('playsinline',      '');
   video.setAttribute('webkit-playsinline', '');
 }
 
-/**
- * Wait for decoded frames without calling video.load() (React src already triggers load).
- * Extra load() was aborting in-flight buffers and stalled canplay on some browsers.
- */
 function waitUntilPlayable(video) {
   return new Promise((resolve) => {
-    if (!video || video.readyState >= 3) {
-      resolve();
-      return;
-    }
+    if (!video || video.readyState >= 3) { resolve(); return; }
     let settled = false;
     const done = () => {
       if (settled) return;
       settled = true;
-      window.clearTimeout(tid);
+      clearTimeout(tid);
       video.removeEventListener('loadeddata', done);
-      video.removeEventListener('canplay', done);
-      video.removeEventListener('error', onErr);
+      video.removeEventListener('canplay',    done);
+      video.removeEventListener('error',      done);
       resolve();
     };
-    const onErr = () => done();
     video.addEventListener('loadeddata', done);
-    video.addEventListener('canplay', done);
-    video.addEventListener('error', onErr, { once: true });
-    const tid = window.setTimeout(done, 15000);
+    video.addEventListener('canplay',    done);
+    video.addEventListener('error',      done, { once: true });
+    const tid = setTimeout(done, 12000);
   });
 }
 
-function CinematicHero() {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [nextIndex, setNextIndex] = useState(1);
-  const [isFading, setIsFading] = useState(false);
-  const [visibleLayer, setVisibleLayer] = useState(0);
-  const [layerSources, setLayerSources] = useState([SCENES[0].src, SCENES[1].src]);
+/* Ref callback: prime muted/playsinline BEFORE React finishes attaching attrs.
+   This ensures the browser's autoplay policy evaluation sees a muted element. */
+function makeVideoRef(refs, index) {
+  return (el) => {
+    if (el) primeVideoEl(el);
+    refs.current[index] = el;
+  };
+}
 
-  const videoRefs = useRef([null, null]);
-  const fadeTimeoutRef = useRef(null);
+function CinematicHero() {
+  const [activeIndex,   setActiveIndex]   = useState(0);
+  const [nextIndex,     setNextIndex]     = useState(1);
+  const [isFading,      setIsFading]      = useState(false);
+  const [visibleLayer,  setVisibleLayer]  = useState(0);
+  const [layerSources,  setLayerSources]  = useState([SCENES[0].src, SCENES[1].src]);
+
+  const videoRefs          = useRef([null, null]);
+  const fadeTimeoutRef     = useRef(null);
   const rotationIntervalRef = useRef(null);
 
-  const activeIndexRef = useRef(activeIndex);
+  const activeIndexRef  = useRef(activeIndex);
   const visibleLayerRef = useRef(visibleLayer);
-  const isFadingRef = useRef(isFading);
+  const isFadingRef     = useRef(isFading);
 
-  useEffect(() => { activeIndexRef.current = activeIndex; }, [activeIndex]);
+  useEffect(() => { activeIndexRef.current  = activeIndex;  }, [activeIndex]);
   useEffect(() => { visibleLayerRef.current = visibleLayer; }, [visibleLayer]);
-  useEffect(() => { isFadingRef.current = isFading; }, [isFading]);
+  useEffect(() => { isFadingRef.current     = isFading;     }, [isFading]);
 
-  const scene = useMemo(() => SCENES[activeIndex], [activeIndex]);
+  const scene    = useMemo(() => SCENES[activeIndex], [activeIndex]);
   const sceneNum = (isFading ? nextIndex : activeIndex) + 1;
 
-  const ensureVideoReady = useCallback(async (video) => {
-    if (!video) return;
-    primeVideoEl(video);
-    try {
-      video.currentTime = 0;
-    } catch (_) {
-      /* seeking before metadata can throw; ignore */
-    }
-    await waitUntilPlayable(video);
-    primeVideoEl(video);
-    await video.play().catch(() => undefined);
-  }, []);
-
-  /* After React commits new src, sync playback (before paint = fewer black frames). */
-  useLayoutEffect(() => {
+  /* Try to play every mounted video element. */
+  const tryPlayAll = useCallback(() => {
     videoRefs.current.forEach((video) => {
       if (!video) return;
       primeVideoEl(video);
       video.play().catch(() => undefined);
     });
-  }, [layerSources]);
+  }, []);
 
+  /* After React commits a new src to a layer, immediately attempt playback. */
+  useLayoutEffect(() => {
+    tryPlayAll();
+  }, [layerSources, tryPlayAll]);
+
+  /* Unlock autoplay on first user interaction (needed for some strict browsers). */
   useEffect(() => {
-    rotationIntervalRef.current = window.setInterval(() => {
+    const unlock = () => {
+      tryPlayAll();
+      document.removeEventListener('click',      unlock);
+      document.removeEventListener('touchstart', unlock);
+      document.removeEventListener('keydown',    unlock);
+    };
+    document.addEventListener('click',      unlock, { passive: true });
+    document.addEventListener('touchstart', unlock, { passive: true });
+    document.addEventListener('keydown',    unlock, { passive: true });
+    return () => {
+      document.removeEventListener('click',      unlock);
+      document.removeEventListener('touchstart', unlock);
+      document.removeEventListener('keydown',    unlock);
+    };
+  }, [tryPlayAll]);
+
+  /* Re-attempt play when the tab/app returns to the foreground. */
+  useEffect(() => {
+    const onVisible = () => { if (document.visibilityState === 'visible') tryPlayAll(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [tryPlayAll]);
+
+  const ensureVideoReady = useCallback(async (video) => {
+    if (!video) return;
+    primeVideoEl(video);
+    try { video.currentTime = 0; } catch (_) { /* pre-metadata seek; ignore */ }
+    await waitUntilPlayable(video);
+    primeVideoEl(video);
+    await video.play().catch(() => undefined);
+  }, []);
+
+  /* Crossfade rotation. */
+  useEffect(() => {
+    rotationIntervalRef.current = setInterval(() => {
       if (isFadingRef.current) return;
 
-      const currentActive = activeIndexRef.current;
+      const currentActive  = activeIndexRef.current;
       const currentVisible = visibleLayerRef.current;
-      const upcoming = (currentActive + 1) % SCENES.length;
-      const hiddenLayer = currentVisible === 0 ? 1 : 0;
+      const upcoming       = (currentActive + 1) % SCENES.length;
+      const hiddenLayer    = currentVisible === 0 ? 1 : 0;
 
       setNextIndex(upcoming);
       setLayerSources((prev) => {
@@ -129,32 +156,27 @@ function CinematicHero() {
         return copy;
       });
 
-      /* Double rAF: run after React commits src + layout to hidden layer. */
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          void (async () => {
-            await ensureVideoReady(videoRefs.current[hiddenLayer]);
-            setIsFading(true);
-            isFadingRef.current = true;
+      /* Double rAF: run after React commits src + layout to the hidden layer. */
+      requestAnimationFrame(() => requestAnimationFrame(async () => {
+        await ensureVideoReady(videoRefs.current[hiddenLayer]);
+        setIsFading(true);
+        isFadingRef.current = true;
 
-            if (fadeTimeoutRef.current) window.clearTimeout(fadeTimeoutRef.current);
-
-            fadeTimeoutRef.current = window.setTimeout(() => {
-              setActiveIndex(upcoming);
-              setVisibleLayer(hiddenLayer);
-              activeIndexRef.current = upcoming;
-              visibleLayerRef.current = hiddenLayer;
-              setIsFading(false);
-              isFadingRef.current = false;
-            }, FADE_MS);
-          })();
-        });
-      });
+        if (fadeTimeoutRef.current) clearTimeout(fadeTimeoutRef.current);
+        fadeTimeoutRef.current = setTimeout(() => {
+          setActiveIndex(upcoming);
+          setVisibleLayer(hiddenLayer);
+          activeIndexRef.current  = upcoming;
+          visibleLayerRef.current = hiddenLayer;
+          setIsFading(false);
+          isFadingRef.current = false;
+        }, FADE_MS);
+      }));
     }, ROTATE_MS);
 
     return () => {
-      if (rotationIntervalRef.current) window.clearInterval(rotationIntervalRef.current);
-      if (fadeTimeoutRef.current) window.clearTimeout(fadeTimeoutRef.current);
+      clearInterval(rotationIntervalRef.current);
+      clearTimeout(fadeTimeoutRef.current);
     };
   }, [ensureVideoReady]);
 
@@ -166,10 +188,7 @@ function CinematicHero() {
 
   const layerScaleClass = (layer) => {
     if (!isFading && layer === visibleLayer) return 'is-zoom';
-    if (isFading) {
-      const hiddenLayer = visibleLayer === 0 ? 1 : 0;
-      if (layer === hiddenLayer) return 'is-zoom';
-    }
+    if (isFading && layer === (visibleLayer === 0 ? 1 : 0)) return 'is-zoom';
     return 'is-scale-1';
   };
 
@@ -178,7 +197,7 @@ function CinematicHero() {
 
       <div className="cinematic-hero-videos">
         <video
-          ref={(el) => { videoRefs.current[0] = el; }}
+          ref={makeVideoRef(videoRefs, 0)}
           className={`cinematic-hero-video ${layerVisibilityClass(0)} ${layerScaleClass(0)}`}
           src={layerSources[0]}
           autoPlay
@@ -189,7 +208,7 @@ function CinematicHero() {
           aria-hidden="true"
         />
         <video
-          ref={(el) => { videoRefs.current[1] = el; }}
+          ref={makeVideoRef(videoRefs, 1)}
           className={`cinematic-hero-video ${layerVisibilityClass(1)} ${layerScaleClass(1)}`}
           src={layerSources[1]}
           autoPlay
@@ -202,7 +221,6 @@ function CinematicHero() {
       </div>
 
       <div className="cinematic-scanlines cinematic-fx-fill" aria-hidden="true" />
-
       <div className="cinematic-grad-left cinematic-fx-fill" aria-hidden="true" />
       <div className="cinematic-grad-bottom cinematic-fx-fill" aria-hidden="true" />
 
@@ -226,7 +244,6 @@ function CinematicHero() {
           </div>
 
           <h1 className="cinematic-title">{scene.title}</h1>
-
           <p className="cinematic-subtitle">{scene.subtitle}</p>
 
           <div className="hero-actions">

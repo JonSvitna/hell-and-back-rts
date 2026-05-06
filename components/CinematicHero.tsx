@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 type Scene = {
   src: string;
@@ -67,58 +67,72 @@ export default function CinematicHero() {
 
   const scene = useMemo(() => SCENES[activeIndex], [activeIndex]);
 
-  const ensureVideoReady = useCallback(async (video: HTMLVideoElement | null) => {
-    if (!video) return;
-    video.muted = true;
-    video.playsInline = true;
-    video.preload = 'auto';
-    video.currentTime = 0;
+  function primeVideoEl(video: HTMLVideoElement) {
+    video.muted        = true;
+    video.defaultMuted = true;
+    video.volume       = 0;
+    video.playsInline  = true;
+    video.preload      = 'auto';
+    video.setAttribute('muted',              '');
+    video.setAttribute('playsinline',        '');
+    video.setAttribute('webkit-playsinline', '');
+  }
 
-    if (video.readyState >= 3) {
-      await video.play().catch(() => undefined);
-      return;
-    }
-
-    await new Promise<void>((resolve) => {
-      const onCanPlay = () => {
-        video.removeEventListener('canplay', onCanPlay);
-        resolve();
-      };
-      video.addEventListener('canplay', onCanPlay, { once: true });
-      video.load();
-    });
-
-    await video.play().catch(() => undefined);
-  }, []);
-
-  useEffect(() => {
-    const preloaders = SCENES.map((item) => {
-      const v = document.createElement('video');
-      v.src = item.src;
-      v.preload = 'auto';
-      v.muted = true;
-      v.playsInline = true;
-      v.load();
-      return v;
-    });
-
-    return () => {
-      preloaders.forEach((v) => {
-        v.pause();
-        v.src = '';
-      });
-    };
-  }, []);
-
-  useEffect(() => {
+  const tryPlayAll = useCallback(() => {
     videoRefs.current.forEach((video) => {
       if (!video) return;
-      video.muted = true;
-      video.playsInline = true;
-      video.preload = 'auto';
+      primeVideoEl(video);
       video.play().catch(() => undefined);
     });
-  }, [layerSources]);
+  }, []);
+
+  /* Prime muted immediately after mount and whenever sources change. */
+  useLayoutEffect(() => { tryPlayAll(); }, [layerSources, tryPlayAll]);
+
+  /* Unlock autoplay on first user gesture. */
+  useEffect(() => {
+    const unlock = () => {
+      tryPlayAll();
+      document.removeEventListener('click',      unlock);
+      document.removeEventListener('touchstart', unlock);
+      document.removeEventListener('keydown',    unlock);
+    };
+    document.addEventListener('click',      unlock, { passive: true });
+    document.addEventListener('touchstart', unlock, { passive: true });
+    document.addEventListener('keydown',    unlock, { passive: true });
+    return () => {
+      document.removeEventListener('click',      unlock);
+      document.removeEventListener('touchstart', unlock);
+      document.removeEventListener('keydown',    unlock);
+    };
+  }, [tryPlayAll]);
+
+  /* Re-attempt when page becomes visible again. */
+  useEffect(() => {
+    const onVisible = () => { if (document.visibilityState === 'visible') tryPlayAll(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [tryPlayAll]);
+
+  const ensureVideoReady = useCallback(async (video: HTMLVideoElement | null) => {
+    if (!video) return;
+    primeVideoEl(video);
+    try { video.currentTime = 0; } catch (_) { /* pre-metadata seek */ }
+
+    if (video.readyState < 3) {
+      await new Promise<void>((resolve) => {
+        let done = false;
+        const finish = () => { if (!done) { done = true; resolve(); } };
+        video.addEventListener('loadeddata', finish, { once: true });
+        video.addEventListener('canplay',    finish, { once: true });
+        video.addEventListener('error',      finish, { once: true });
+        setTimeout(finish, 12000);
+      });
+    }
+
+    primeVideoEl(video);
+    await video.play().catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     rotationIntervalRef.current = window.setInterval(() => {
@@ -193,9 +207,7 @@ export default function CinematicHero() {
     >
       <div className="absolute inset-0">
         <video
-          ref={(el) => {
-            videoRefs.current[0] = el;
-          }}
+          ref={(el) => { if (el) primeVideoEl(el); videoRefs.current[0] = el; }}
           className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-1000 ease-in-out ${layerOpacity(
             0,
           )} ${layerScale(0)}`}
@@ -208,9 +220,7 @@ export default function CinematicHero() {
           aria-hidden="true"
         />
         <video
-          ref={(el) => {
-            videoRefs.current[1] = el;
-          }}
+          ref={(el) => { if (el) primeVideoEl(el); videoRefs.current[1] = el; }}
           className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-1000 ease-in-out ${layerOpacity(
             1,
           )} ${layerScale(1)}`}
