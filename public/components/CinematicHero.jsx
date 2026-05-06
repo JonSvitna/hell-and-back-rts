@@ -10,23 +10,23 @@ const {
 const SCENES = [
   {
     src: '/videos/war-begins.mp4',
-    title: 'FROM HELL.',
+    title: 'FROM\nHELL.',
     subtitle: 'Three factions. One objective. Twenty minutes to decide the war.',
   },
   {
     src: '/videos/swarm-arrives.mp4',
-    title: 'THE SWARM ARRIVES.',
+    title: 'THE\nSWARM.',
     subtitle: 'Overwhelming numbers. Fragile as glass. Fast as fire.',
   },
   {
     src: '/videos/final-convergence.mp4',
-    title: 'BACK IN 20.',
+    title: 'BACK\nIN 20.',
     subtitle: 'No turtling. No late games. One commander walks off the rock.',
   },
 ];
 
-const ROTATE_MS = 6000;
-const FADE_MS   = 1000;
+const ROTATE_MS = 7000;
+const FADE_MS   = 900;
 
 function primeVideoEl(video) {
   if (!video) return;
@@ -35,8 +35,8 @@ function primeVideoEl(video) {
   video.volume       = 0;
   video.playsInline  = true;
   video.preload      = 'auto';
-  video.setAttribute('muted',            '');
-  video.setAttribute('playsinline',      '');
+  video.setAttribute('muted',              '');
+  video.setAttribute('playsinline',        '');
   video.setAttribute('webkit-playsinline', '');
 }
 
@@ -60,8 +60,6 @@ function waitUntilPlayable(video) {
   });
 }
 
-/* Ref callback: prime muted/playsinline BEFORE React finishes attaching attrs.
-   This ensures the browser's autoplay policy evaluation sees a muted element. */
 function makeVideoRef(refs, index) {
   return (el) => {
     if (el) primeVideoEl(el);
@@ -75,10 +73,13 @@ function CinematicHero() {
   const [isFading,      setIsFading]      = useState(false);
   const [visibleLayer,  setVisibleLayer]  = useState(0);
   const [layerSources,  setLayerSources]  = useState([SCENES[0].src, SCENES[1].src]);
+  const [playBlocked,   setPlayBlocked]   = useState(false);
+  const [textVisible,   setTextVisible]   = useState(true);
 
-  const videoRefs          = useRef([null, null]);
-  const fadeTimeoutRef     = useRef(null);
+  const videoRefs           = useRef([null, null]);
+  const fadeTimeoutRef      = useRef(null);
   const rotationIntervalRef = useRef(null);
+  const textFadeRef         = useRef(null);
 
   const activeIndexRef  = useRef(activeIndex);
   const visibleLayerRef = useRef(visibleLayer);
@@ -88,26 +89,27 @@ function CinematicHero() {
   useEffect(() => { visibleLayerRef.current = visibleLayer; }, [visibleLayer]);
   useEffect(() => { isFadingRef.current     = isFading;     }, [isFading]);
 
-  const scene    = useMemo(() => SCENES[activeIndex], [activeIndex]);
-  const sceneNum = (isFading ? nextIndex : activeIndex) + 1;
+  const displayIndex = isFading ? nextIndex : activeIndex;
+  const scene        = SCENES[displayIndex];
 
-  /* Try to play every mounted video element. */
   const tryPlayAll = useCallback(() => {
-    videoRefs.current.forEach((video) => {
-      if (!video) return;
+    const plays = videoRefs.current.map((video) => {
+      if (!video) return Promise.resolve(true);
       primeVideoEl(video);
-      video.play().catch(() => undefined);
+      return video.play().then(() => true).catch(() => false);
+    });
+    Promise.all(plays).then((results) => {
+      const allBlocked = results.every(r => r === false);
+      setPlayBlocked(allBlocked);
     });
   }, []);
 
-  /* After React commits a new src to a layer, immediately attempt playback. */
-  useLayoutEffect(() => {
-    tryPlayAll();
-  }, [layerSources, tryPlayAll]);
+  useLayoutEffect(() => { tryPlayAll(); }, [layerSources, tryPlayAll]);
 
-  /* Unlock autoplay on first user interaction (needed for some strict browsers). */
   useEffect(() => {
+    tryPlayAll();
     const unlock = () => {
+      setPlayBlocked(false);
       tryPlayAll();
       document.removeEventListener('click',      unlock);
       document.removeEventListener('touchstart', unlock);
@@ -123,7 +125,6 @@ function CinematicHero() {
     };
   }, [tryPlayAll]);
 
-  /* Re-attempt play when the tab/app returns to the foreground. */
   useEffect(() => {
     const onVisible = () => { if (document.visibilityState === 'visible') tryPlayAll(); };
     document.addEventListener('visibilitychange', onVisible);
@@ -133,13 +134,12 @@ function CinematicHero() {
   const ensureVideoReady = useCallback(async (video) => {
     if (!video) return;
     primeVideoEl(video);
-    try { video.currentTime = 0; } catch (_) { /* pre-metadata seek; ignore */ }
+    try { video.currentTime = 0; } catch (_) {}
     await waitUntilPlayable(video);
     primeVideoEl(video);
     await video.play().catch(() => undefined);
   }, []);
 
-  /* Crossfade rotation. */
   useEffect(() => {
     rotationIntervalRef.current = setInterval(() => {
       if (isFadingRef.current) return;
@@ -156,7 +156,10 @@ function CinematicHero() {
         return copy;
       });
 
-      /* Double rAF: run after React commits src + layout to the hidden layer. */
+      setTextVisible(false);
+      if (textFadeRef.current) clearTimeout(textFadeRef.current);
+      textFadeRef.current = setTimeout(() => setTextVisible(true), FADE_MS * 0.55);
+
       requestAnimationFrame(() => requestAnimationFrame(async () => {
         await ensureVideoReady(videoRefs.current[hiddenLayer]);
         setIsFading(true);
@@ -169,7 +172,7 @@ function CinematicHero() {
           activeIndexRef.current  = upcoming;
           visibleLayerRef.current = hiddenLayer;
           setIsFading(false);
-          isFadingRef.current = false;
+          isFadingRef.current     = false;
         }, FADE_MS);
       }));
     }, ROTATE_MS);
@@ -177,91 +180,99 @@ function CinematicHero() {
     return () => {
       clearInterval(rotationIntervalRef.current);
       clearTimeout(fadeTimeoutRef.current);
+      clearTimeout(textFadeRef.current);
     };
   }, [ensureVideoReady]);
 
   const layerVisibilityClass = (layer) => {
-    if (!isFading) return layer === visibleLayer ? 'is-visible' : 'is-hidden';
+    if (!isFading) return layer === visibleLayer ? 'ch-v-show' : 'ch-v-hide';
     const hiddenLayer = visibleLayer === 0 ? 1 : 0;
-    return layer === hiddenLayer ? 'is-visible' : 'is-hidden';
-  };
-
-  const layerScaleClass = (layer) => {
-    if (!isFading && layer === visibleLayer) return 'is-zoom';
-    if (isFading && layer === (visibleLayer === 0 ? 1 : 0)) return 'is-zoom';
-    return 'is-scale-1';
+    return layer === hiddenLayer ? 'ch-v-show' : 'ch-v-hide';
   };
 
   return (
-    <section className="cinematic-hero" id="top">
+    <section className="ch" id="top" aria-label="Hero">
 
-      <div className="cinematic-hero-videos">
-        <video
-          ref={makeVideoRef(videoRefs, 0)}
-          className={`cinematic-hero-video ${layerVisibilityClass(0)} ${layerScaleClass(0)}`}
-          src={layerSources[0]}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          aria-hidden="true"
-        />
-        <video
-          ref={makeVideoRef(videoRefs, 1)}
-          className={`cinematic-hero-video ${layerVisibilityClass(1)} ${layerScaleClass(1)}`}
-          src={layerSources[1]}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          aria-hidden="true"
-        />
+      <div className="ch-videos" aria-hidden="true">
+        {[0, 1].map((i) => (
+          <video
+            key={i}
+            ref={makeVideoRef(videoRefs, i)}
+            className={`ch-video ${layerVisibilityClass(i)}`}
+            src={layerSources[i]}
+            autoPlay muted loop playsInline preload="auto"
+          />
+        ))}
       </div>
 
-      <div className="cinematic-scanlines cinematic-fx-fill" aria-hidden="true" />
-      <div className="cinematic-grad-left cinematic-fx-fill" aria-hidden="true" />
-      <div className="cinematic-grad-bottom cinematic-fx-fill" aria-hidden="true" />
+      <div className="ch-overlay-left"   aria-hidden="true"/>
+      <div className="ch-overlay-bottom" aria-hidden="true"/>
+      <div className="ch-scanlines"      aria-hidden="true"/>
 
-      <div className="cinematic-corner tl" aria-hidden="true" />
-      <div className="cinematic-corner tr" aria-hidden="true" />
-      <div className="cinematic-corner bl" aria-hidden="true" />
-      <div className="cinematic-corner br" aria-hidden="true" />
+      {playBlocked && (
+        <button
+          className="ch-tap-prompt"
+          onClick={tryPlayAll}
+          aria-label="Tap to play video"
+        >
+          <svg viewBox="0 0 56 56" width="52" height="52" fill="none" aria-hidden="true">
+            <circle cx="28" cy="28" r="26" stroke="currentColor" strokeWidth="1.5" opacity="0.45"/>
+            <path d="M22 19l16 9-16 9V19z" fill="currentColor"/>
+          </svg>
+          <span className="mono">TAP TO PLAY</span>
+        </button>
+      )}
 
-      <div className="cinematic-content">
-        <div className="cinematic-content-inner">
+      <div className="ch-corner tl" aria-hidden="true"/>
+      <div className="ch-corner tr" aria-hidden="true"/>
+      <div className="ch-corner bl" aria-hidden="true"/>
+      <div className="ch-corner br" aria-hidden="true"/>
 
-          <div className="cinematic-hud-label">
-            <span>◤ BROADCAST {sceneNum}/{SCENES.length} · LIVE</span>
-            <div className="cinematic-progress-track">
+      <div className="ch-content">
+        <div className={`ch-inner${textVisible ? '' : ' ch-text-hide'}`}>
+
+          <div className="ch-hud-row">
+            <span className="ch-live-dot" aria-hidden="true"/>
+            <span className="mono ch-live-label">LIVE &nbsp;·&nbsp; {displayIndex + 1} / {SCENES.length}</span>
+            <div className="ch-prog-track" aria-hidden="true">
               <div
-                key={activeIndex}
-                className="cinematic-progress-fill"
+                key={displayIndex}
+                className="ch-prog-fill"
                 style={{ animationDuration: `${ROTATE_MS}ms` }}
               />
             </div>
           </div>
 
-          <h1 className="cinematic-title">{scene.title}</h1>
-          <p className="cinematic-subtitle">{scene.subtitle}</p>
+          <h1 className="ch-title">{scene.title}</h1>
+          <p  className="ch-sub">{scene.subtitle}</p>
 
-          <div className="hero-actions">
+          <div className="ch-actions">
             <a href="#early-access" className="btn btn-primary">
               Request Early Access
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="18" height="18">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="18" height="18" aria-hidden="true">
                 <path d="M5 12h14M13 6l6 6-6 6"/>
               </svg>
             </a>
             <a href="#factions" className="btn btn-ghost">Meet the Factions</a>
           </div>
 
+          <div className="ch-dots" role="tablist" aria-label="Video scenes">
+            {SCENES.map((_, i) => (
+              <span
+                key={i}
+                role="tab"
+                aria-selected={i === displayIndex}
+                className={`ch-dot${i === displayIndex ? ' ch-dot-on' : ''}`}
+              />
+            ))}
+          </div>
+
         </div>
       </div>
 
-      <div className="hero-scroll">
-        <span>SCROLL</span>
-        <span className="hero-scroll-line" />
+      <div className="ch-scroll" aria-hidden="true">
+        <span className="mono">SCROLL</span>
+        <span className="ch-scroll-line"/>
       </div>
 
     </section>
