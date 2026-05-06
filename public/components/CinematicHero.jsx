@@ -1,4 +1,11 @@
-const { useCallback, useEffect, useMemo, useRef, useState } = React;
+const {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} = React;
 
 const SCENES = [
   {
@@ -21,10 +28,47 @@ const SCENES = [
 const ROTATE_MS = 6000;
 const FADE_MS = 1000;
 
+/** Autoplay-safe priming for iOS/Safari/Chrome muted inline policy */
+function primeVideoEl(video) {
+  if (!video) return;
+  video.muted = true;
+  video.defaultMuted = true;
+  video.volume = 0;
+  video.playsInline = true;
+  video.preload = 'auto';
+  video.setAttribute('muted', '');
+  video.setAttribute('playsinline', '');
+  video.setAttribute('webkit-playsinline', '');
+}
+
 /**
- * Mirrors logic in `components/CinematicHero.tsx` (TypeScript source of truth).
- * Two stacked videos, always mounted; crossfade via opacity only.
+ * Wait for decoded frames without calling video.load() (React src already triggers load).
+ * Extra load() was aborting in-flight buffers and stalled canplay on some browsers.
  */
+function waitUntilPlayable(video) {
+  return new Promise((resolve) => {
+    if (!video || video.readyState >= 3) {
+      resolve();
+      return;
+    }
+    let settled = false;
+    const done = () => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(tid);
+      video.removeEventListener('loadeddata', done);
+      video.removeEventListener('canplay', done);
+      video.removeEventListener('error', onErr);
+      resolve();
+    };
+    const onErr = () => done();
+    video.addEventListener('loadeddata', done);
+    video.addEventListener('canplay', done);
+    video.addEventListener('error', onErr, { once: true });
+    const tid = window.setTimeout(done, 15000);
+  });
+}
+
 function CinematicHero() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [nextIndex, setNextIndex] = useState(1);
@@ -49,49 +93,22 @@ function CinematicHero() {
 
   const ensureVideoReady = useCallback(async (video) => {
     if (!video) return;
-    video.muted = true;
-    video.playsInline = true;
-    video.preload = 'auto';
-    video.currentTime = 0;
-
-    if (video.readyState >= 3) {
-      await video.play().catch(() => undefined);
-      return;
+    primeVideoEl(video);
+    try {
+      video.currentTime = 0;
+    } catch (_) {
+      /* seeking before metadata can throw; ignore */
     }
-
-    await new Promise((resolve) => {
-      const onCanPlay = () => {
-        video.removeEventListener('canplay', onCanPlay);
-        resolve();
-      };
-      video.addEventListener('canplay', onCanPlay, { once: true });
-      video.load();
-    });
-
+    await waitUntilPlayable(video);
+    primeVideoEl(video);
     await video.play().catch(() => undefined);
   }, []);
 
-  useEffect(() => {
-    const preloaders = SCENES.map((item) => {
-      const v = document.createElement('video');
-      v.src = item.src;
-      v.preload = 'auto';
-      v.muted = true;
-      v.playsInline = true;
-      v.load();
-      return v;
-    });
-    return () => {
-      preloaders.forEach((v) => { v.pause(); v.src = ''; });
-    };
-  }, []);
-
-  useEffect(() => {
+  /* After React commits new src, sync playback (before paint = fewer black frames). */
+  useLayoutEffect(() => {
     videoRefs.current.forEach((video) => {
       if (!video) return;
-      video.muted = true;
-      video.playsInline = true;
-      video.preload = 'auto';
+      primeVideoEl(video);
       video.play().catch(() => undefined);
     });
   }, [layerSources]);
@@ -112,23 +129,26 @@ function CinematicHero() {
         return copy;
       });
 
+      /* Double rAF: run after React commits src + layout to hidden layer. */
       requestAnimationFrame(() => {
-        void (async () => {
-          await ensureVideoReady(videoRefs.current[hiddenLayer]);
-          setIsFading(true);
-          isFadingRef.current = true;
+        requestAnimationFrame(() => {
+          void (async () => {
+            await ensureVideoReady(videoRefs.current[hiddenLayer]);
+            setIsFading(true);
+            isFadingRef.current = true;
 
-          if (fadeTimeoutRef.current) window.clearTimeout(fadeTimeoutRef.current);
+            if (fadeTimeoutRef.current) window.clearTimeout(fadeTimeoutRef.current);
 
-          fadeTimeoutRef.current = window.setTimeout(() => {
-            setActiveIndex(upcoming);
-            setVisibleLayer(hiddenLayer);
-            activeIndexRef.current = upcoming;
-            visibleLayerRef.current = hiddenLayer;
-            setIsFading(false);
-            isFadingRef.current = false;
-          }, FADE_MS);
-        })();
+            fadeTimeoutRef.current = window.setTimeout(() => {
+              setActiveIndex(upcoming);
+              setVisibleLayer(hiddenLayer);
+              activeIndexRef.current = upcoming;
+              visibleLayerRef.current = hiddenLayer;
+              setIsFading(false);
+              isFadingRef.current = false;
+            }, FADE_MS);
+          })();
+        });
       });
     }, ROTATE_MS);
 
@@ -138,78 +158,77 @@ function CinematicHero() {
     };
   }, [ensureVideoReady]);
 
-  const layerOpacity = (layer) => {
-    if (!isFading) return layer === visibleLayer ? 'opacity-100' : 'opacity-0';
+  const layerVisibilityClass = (layer) => {
+    if (!isFading) return layer === visibleLayer ? 'is-visible' : 'is-hidden';
     const hiddenLayer = visibleLayer === 0 ? 1 : 0;
-    return layer === hiddenLayer ? 'opacity-100' : 'opacity-0';
+    return layer === hiddenLayer ? 'is-visible' : 'is-hidden';
   };
 
-  const layerScale = (layer) => {
-    if (!isFading && layer === visibleLayer) return 'scale-105';
+  const layerScaleClass = (layer) => {
+    if (!isFading && layer === visibleLayer) return 'is-zoom';
     if (isFading) {
       const hiddenLayer = visibleLayer === 0 ? 1 : 0;
-      if (layer === hiddenLayer) return 'scale-105';
+      if (layer === hiddenLayer) return 'is-zoom';
     }
-    return 'scale-100';
+    return 'is-scale-1';
   };
 
   return (
-    <section className="cinematic-hero relative w-full overflow-hidden bg-black" id="top">
+    <section className="cinematic-hero" id="top">
 
-      {/* Video layers */}
-      <div className="absolute inset-0">
+      <div className="cinematic-hero-videos">
         <video
           ref={(el) => { videoRefs.current[0] = el; }}
-          className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-1000 ease-in-out ${layerOpacity(0)} ${layerScale(0)}`}
+          className={`cinematic-hero-video ${layerVisibilityClass(0)} ${layerScaleClass(0)}`}
           src={layerSources[0]}
-          autoPlay muted loop playsInline preload="auto"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
           aria-hidden="true"
         />
         <video
           ref={(el) => { videoRefs.current[1] = el; }}
-          className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-1000 ease-in-out ${layerOpacity(1)} ${layerScale(1)}`}
+          className={`cinematic-hero-video ${layerVisibilityClass(1)} ${layerScaleClass(1)}`}
           src={layerSources[1]}
-          autoPlay muted loop playsInline preload="auto"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
           aria-hidden="true"
         />
       </div>
 
-      {/* Scanlines — hidden by :root.no-scan */}
-      <div className="cinematic-scanlines pointer-events-none absolute inset-0" aria-hidden="true" />
+      <div className="cinematic-scanlines cinematic-fx-fill" aria-hidden="true" />
 
-      {/* Directional gradients — left for readability, bottom to blend into next section */}
-      <div className="cinematic-grad-left pointer-events-none absolute inset-0" />
-      <div className="cinematic-grad-bottom pointer-events-none absolute inset-0" />
+      <div className="cinematic-grad-left cinematic-fx-fill" aria-hidden="true" />
+      <div className="cinematic-grad-bottom cinematic-fx-fill" aria-hidden="true" />
 
-      {/* HUD corner brackets — hidden by :root.no-corners */}
       <div className="cinematic-corner tl" aria-hidden="true" />
       <div className="cinematic-corner tr" aria-hidden="true" />
       <div className="cinematic-corner bl" aria-hidden="true" />
       <div className="cinematic-corner br" aria-hidden="true" />
 
-      {/* Overlay content */}
-      <div className="cinematic-content relative">
+      <div className="cinematic-content">
         <div className="cinematic-content-inner">
 
-          {/* HUD scene indicator with progress bar */}
           <div className="cinematic-hud-label">
             <span>◤ BROADCAST {sceneNum}/{SCENES.length} · LIVE</span>
             <div className="cinematic-progress-track">
               <div
                 key={activeIndex}
                 className="cinematic-progress-fill"
-                style={{ animationDuration: ROTATE_MS + 'ms' }}
+                style={{ animationDuration: `${ROTATE_MS}ms` }}
               />
             </div>
           </div>
 
-          {/* Scene title */}
           <h1 className="cinematic-title">{scene.title}</h1>
 
-          {/* Scene subtitle */}
           <p className="cinematic-subtitle">{scene.subtitle}</p>
 
-          {/* CTAs — reuse site button classes for visual consistency */}
           <div className="hero-actions">
             <a href="#early-access" className="btn btn-primary">
               Request Early Access
@@ -223,8 +242,7 @@ function CinematicHero() {
         </div>
       </div>
 
-      {/* Scroll indicator */}
-      <div className="hero-scroll" style={{ zIndex: 10 }}>
+      <div className="hero-scroll">
         <span>SCROLL</span>
         <span className="hero-scroll-line" />
       </div>

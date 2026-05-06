@@ -846,7 +846,42 @@ section { position: relative; z-index: 1; }
 }
 
 /* ---------- CinematicHero ---------- */
-.cinematic-hero { min-height: 100dvh; }
+/* Do not rely on Tailwind CDN for video framing — overlays must work if CDN fails. */
+.cinematic-hero {
+  position: relative;
+  width: 100%;
+  min-height: 100dvh;
+  overflow: hidden;
+  background: #000;
+}
+
+.cinematic-hero-videos {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.cinematic-hero-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  transition: opacity 1s ease-in-out, transform 1s ease-in-out;
+}
+
+.cinematic-hero-video.is-visible { opacity: 1; }
+.cinematic-hero-video.is-hidden { opacity: 0; }
+.cinematic-hero-video.is-zoom { transform: scale(1.05); }
+.cinematic-hero-video.is-scale-1 { transform: scale(1); }
+
+/* Full-bleed FX under Tailwind — do not depend on cdn.tailwindcss.com */
+.cinematic-fx-fill {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
 
 .cinematic-scanlines {
   background: repeating-linear-gradient(0deg, transparent 0 3px, oklch(0 0 0 / 0.18) 3px 4px);
@@ -878,6 +913,7 @@ section { position: relative; z-index: 1; }
 :root.no-corners .cinematic-corner { display: none; }
 
 .cinematic-content {
+  position: relative;
   min-height: 100dvh;
   display: flex;
   align-items: center;
