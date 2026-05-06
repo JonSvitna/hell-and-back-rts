@@ -1,7 +1,7 @@
 const { useState, useEffect, useRef } = React;
 const CinematicHero = window.CinematicHero;
 
-/* ---------- Tiny inline icons ---------- */
+/* ── Inline SVG glyphs ───────────────────────────────── */
 const Glyph = {
   clock: (props) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" {...props}>
@@ -33,9 +33,14 @@ const Glyph = {
       <path d="M5 12h14M13 6l6 6-6 6"/>
     </svg>
   ),
+  target: (props) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" {...props}>
+      <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2"/>
+    </svg>
+  ),
 };
 
-/* ---------- Top nav ---------- */
+/* ── Nav ──────────────────────────────────────────────── */
 const Nav = () => (
   <nav className="nav">
     <div className="nav-inner">
@@ -62,7 +67,7 @@ const Nav = () => (
   </nav>
 );
 
-/* ---------- Marquee ---------- */
+/* ── Marquee ──────────────────────────────────────────── */
 const Marquee = () => {
   const items = [
     '20-MINUTE MATCHES', '◆', 'CROSS-PLATFORM', '◆',
@@ -80,117 +85,193 @@ const Marquee = () => {
   );
 };
 
-/* ---------- Factions ---------- */
-const FactionsSection = () => (
-  <section className="factions" id="factions">
-    <header className="section-head">
-      <div className="section-eyebrow">// SECTION 02 — CHOOSE YOUR SIDE</div>
-      <h2 className="section-title">Choose Your<br/>Command Style.</h2>
-      <p className="section-lede">
-        Three factions. No mirror matches. No safe choices. Every army changes
-        how you fight.
-      </p>
-    </header>
+/* ── Factions — interactive asymmetric selector ───────── */
+const FactionsSection = () => {
+  const [active, setActive] = useState(0);
+  const f = FACTIONS[active];
 
-    <div className="faction-grid">
-      {FACTIONS.map((f, i) => <FactionCard key={f.key} f={f} idx={i}/>)}
-    </div>
+  return (
+    <section className="factions" id="factions">
+      <header className="section-head">
+        <div className="section-eyebrow" data-reveal>// SECTION 02 — CHOOSE YOUR SIDE</div>
+        <h2 className="section-title" data-reveal data-delay="1">
+          Choose Your<br/>Command Style.
+        </h2>
+        <p className="section-lede" data-reveal data-delay="2">
+          Three factions. No mirror matches. No safe choices.
+          Every army changes how you fight.
+        </p>
+      </header>
 
-    <div className="faction-decision">
-      <p className="faction-decision-q">Which faction would you command?</p>
-      <div className="faction-decision-btns">
-        {FACTIONS.map(f => (
-          <a key={f.key} href="#early-access"
-             className="btn btn-ghost faction-decision-btn"
-             style={{ '--accent': f.color }}
-             data-faction={f.key}>
-            I command {f.name}
-          </a>
-        ))}
+      <div className="faction-selector">
+        {/* Left: expanded faction card */}
+        <div className="faction-main">
+          <FactionCard key={active} f={f} idx={active}/>
+        </div>
+
+        {/* Right: compact selector tabs */}
+        <div className="faction-tabs">
+          {FACTIONS.map((ft, i) => (
+            <button
+              key={ft.key}
+              className={`faction-tab${i === active ? ' is-active' : ''}`}
+              onClick={() => setActive(i)}
+              style={{ '--accent': ft.color }}
+              aria-pressed={i === active}
+            >
+              <div className="ft-code mono">{ft.code}</div>
+              <div className="ft-name">{ft.name}</div>
+              <div className="ft-role mono">{ft.role}</div>
+              <Glyph.arrow
+                className="ft-arrow"
+                width="14" height="14"
+                aria-hidden="true"
+              />
+            </button>
+          ))}
+        </div>
       </div>
-    </div>
-  </section>
-);
 
-/* ---------- Mobile Gameplay Promise ---------- */
-const MOBILE_CARDS = [
-  { n: '01', t: '3–5 Minute Battles', d: 'Tight matches that respect your time. Open, fight, win, rematch.', I: Glyph.clock },
-  { n: '02', t: 'Clean Unit Readability', d: 'Faction colors, silhouettes, and HUD built for a phone screen — not a 27" monitor.', I: Glyph.signal },
-  { n: '03', t: 'Tap & Drag Control', d: 'Tap to command. Drag to reposition. Trigger abilities with your thumb.', I: Glyph.bolt },
-  { n: '04', t: 'Tactical Abilities', d: 'Real-time abilities with meaningful cooldowns. Outplay, don’t outclick.', I: Glyph.cross },
-  { n: '05', t: 'Faction-Based Counters', d: 'Every army has a clear identity. Reads matter more than reflex.', I: Glyph.device },
-];
+      <div className="faction-decision" data-reveal>
+        <p className="faction-decision-q">Which faction would you command?</p>
+        <div className="faction-decision-btns">
+          {FACTIONS.map(ft => (
+            <a
+              key={ft.key}
+              href="#early-access"
+              className="btn btn-ghost faction-decision-btn"
+              style={{ '--accent': ft.color }}
+              data-faction={ft.key}
+            >
+              {ft.name}
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
 
+/* ── Mobile Gameplay — Bento grid ─────────────────────── */
 const MobileGameplaySection = () => (
   <section className="mobile-promise" id="mobile">
     <header className="section-head">
-      <div className="section-eyebrow">// SECTION 03 — BUILT FOR iOS</div>
-      <h2 className="section-title">Built for Your Thumb,<br/>Not a Keyboard.</h2>
-      <p className="section-lede">
-        Tap to command. Drag to reposition. Trigger abilities in real time.
-        Every decision is built for fast mobile battles without losing the RTS
-        feeling.
+      <div className="section-eyebrow" data-reveal>// SECTION 03 — BUILT FOR iOS</div>
+      <h2 className="section-title" data-reveal data-delay="1">
+        Built for Your Thumb,<br/>Not a Keyboard.
+      </h2>
+      <p className="section-lede" data-reveal data-delay="2">
+        Command, reposition, and trigger abilities with one hand.
+        Every control decision was made for fast mobile battles
+        without losing the RTS soul.
       </p>
     </header>
 
-    <div className="mp-grid">
-      {MOBILE_CARDS.map(c => (
-        <article key={c.n} className="mp-card">
-          <div className="mp-num mono">M · {c.n}</div>
-          <c.I className="mp-icon" width="28" height="28"/>
-          <h3>{c.t}</h3>
-          <p>{c.d}</p>
-        </article>
-      ))}
+    <div className="bento-grid">
+
+      {/* Cell A — wide left (2 cols) */}
+      <article className="bento-cell-a bento-card lg" data-reveal>
+        <Glyph.clock className="bento-icon" width="34" height="34"/>
+        <div className="bento-text">
+          <div className="bento-num mono">M · 01</div>
+          <h3>3–5 Minute Battles</h3>
+          <p>Matches built to respect your time. Open, fight, decide, rematch — no cooldown timers punishing you for closing the app.</p>
+        </div>
+      </article>
+
+      {/* Cell B — tall right (1 col) */}
+      <article className="bento-cell-b bento-card" data-reveal data-delay="1">
+        <div className="bento-num mono">M · 02</div>
+        <Glyph.signal className="bento-icon" width="28" height="28"/>
+        <h3>Readable Units</h3>
+        <p>Faction colors, silhouettes, and HUD built for a phone screen — not a 27" monitor.</p>
+      </article>
+
+      {/* Cell C — short left (1 col) */}
+      <article className="bento-cell-c bento-card" data-reveal data-delay="1">
+        <div className="bento-num mono">M · 03</div>
+        <Glyph.device className="bento-icon" width="28" height="28"/>
+        <h3>Tap &amp; Drag</h3>
+        <p>Tap to command. Drag to reposition. No floating menus.</p>
+      </article>
+
+      {/* Cell D — wide right (2 cols) */}
+      <article className="bento-cell-d bento-card lg" data-reveal data-delay="2">
+        <Glyph.bolt className="bento-icon" width="34" height="34"/>
+        <div className="bento-text">
+          <div className="bento-num mono">M · 04</div>
+          <h3>Real Abilities</h3>
+          <p>Meaningful cooldowns. Outplay, don't outclick. Every ability changes the math of the next ten seconds.</p>
+        </div>
+      </article>
+
+      {/* Cell E — full width (3 cols) */}
+      <article className="bento-cell-e bento-card" data-reveal>
+        <Glyph.target className="bento-icon" width="36" height="36"/>
+        <div className="bento-text">
+          <div className="bento-num mono">M · 05</div>
+          <h3>Faction-Based Counters</h3>
+          <p>
+            Every army has a clear identity. Reads matter more than reaction time.
+            Vanguard holds. Ascendancy outranges. Hive overwhelms.
+          </p>
+        </div>
+        <div className="bento-ticker" aria-hidden="true">
+          <div className="bento-ticker-fill"/>
+        </div>
+      </article>
+
     </div>
   </section>
 );
 
-/* ---------- Strategy Without Waiting ---------- */
+/* ── Strategy ─────────────────────────────────────────── */
 const StrategySection = () => (
   <section className="strategy" id="strategy">
     <header className="section-head">
-      <div className="section-eyebrow">// SECTION 04 — REAL STRATEGY</div>
-      <h2 className="section-title">Strategy Without<br/>the Waiting Game.</h2>
-      <p className="section-lede">
+      <div className="section-eyebrow" data-reveal>// SECTION 04 — REAL STRATEGY</div>
+      <h2 className="section-title" data-reveal data-delay="1">
+        Strategy Without<br/>the Waiting Game.
+      </h2>
+      <p className="section-lede" data-reveal data-delay="2">
         Hell &amp; Back is designed for players who want tactical decisions
-        now — not timers, clutter, or endless base menus.
+        now — not timers, clutter, or endless base menus between fights.
       </p>
     </header>
 
     <div className="vs-wrap">
-      <div className="vs-panel vs-old">
+      <div className="vs-panel vs-old" data-reveal>
         <div className="vs-label mono">// LEGACY MOBILE STRATEGY</div>
         <ul>
-          <li><Glyph.cross className="vs-x" width="18" height="18"/> Build timers that punish closing the app</li>
-          <li><Glyph.cross className="vs-x" width="18" height="18"/> Bloated economy &amp; resource menus</li>
-          <li><Glyph.cross className="vs-x" width="18" height="18"/> Passive waiting loops disguised as gameplay</li>
-          <li><Glyph.cross className="vs-x" width="18" height="18"/> Cluttered HUD optimized for tablets only</li>
-          <li><Glyph.cross className="vs-x" width="18" height="18"/> Faction “identity” that’s really just stat tweaks</li>
+          <li><Glyph.cross className="vs-x" width="16" height="16"/>Build timers that punish closing the app</li>
+          <li><Glyph.cross className="vs-x" width="16" height="16"/>Bloated economy &amp; resource menus</li>
+          <li><Glyph.cross className="vs-x" width="16" height="16"/>Passive waiting loops disguised as gameplay</li>
+          <li><Glyph.cross className="vs-x" width="16" height="16"/>Cluttered HUD optimized for tablets only</li>
+          <li><Glyph.cross className="vs-x" width="16" height="16"/>Faction "identity" that's really just stat tweaks</li>
         </ul>
       </div>
       <div className="vs-divider" aria-hidden="true"><span>VS</span></div>
-      <div className="vs-panel vs-new">
+      <div className="vs-panel vs-new" data-reveal data-delay="2">
         <div className="vs-label mono">// HELL &amp; BACK</div>
         <ul>
-          <li><span className="vs-check">◆</span> Fast 3–5 minute matches</li>
-          <li><span className="vs-check">◆</span> No bloated economy screens</li>
+          <li><span className="vs-check">◆</span> Fast 3–5 minute matches, every time</li>
+          <li><span className="vs-check">◆</span> No bloated economy or resource screens</li>
           <li><span className="vs-check">◆</span> No passive waiting loops</li>
-          <li><span className="vs-check">◆</span> Readable battlefield design</li>
-          <li><span className="vs-check">◆</span> Every faction has a clear identity</li>
+          <li><span className="vs-check">◆</span> Readable battlefield design for phones</li>
+          <li><span className="vs-check">◆</span> Every faction has a genuine identity</li>
         </ul>
       </div>
     </div>
   </section>
 );
 
-/* ---------- CTA / Mailing list ---------- */
+/* ── CTA / Mailing list ───────────────────────────────── */
 const CTASection = () => {
-  const [email, setEmail] = useState('');
-  const [platform, setPlatform] = useState('ios');
-  const [faction, setFaction] = useState('vanguard');
+  const [email,     setEmail]     = useState('');
+  const [platform,  setPlatform]  = useState('ios');
+  const [faction,   setFaction]   = useState('vanguard');
   const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState('');
+  const [error,     setError]     = useState('');
 
   const submit = (e) => {
     e.preventDefault();
@@ -199,18 +280,14 @@ const CTASection = () => {
       return;
     }
     setError('');
-    // TODO: wire to Klaviyo / Supabase / ConvertKit / Vercel serverless route.
-    // For now this is frontend-only and does not persist email anywhere.
     setSubmitted(true);
   };
 
   return (
     <section className="cta" id="early-access">
-      <div className="cta-frame">
-        <div className="cta-corner tl"/>
-        <div className="cta-corner tr"/>
-        <div className="cta-corner bl"/>
-        <div className="cta-corner br"/>
+      <div className="cta-frame" data-reveal>
+        <div className="cta-corner tl"/><div className="cta-corner tr"/>
+        <div className="cta-corner bl"/><div className="cta-corner br"/>
 
         <div className="cta-eyebrow mono">▣ EARLY ACCESS · ENLISTMENT FORM 0-7</div>
 
@@ -219,30 +296,32 @@ const CTASection = () => {
           <span className="cta-hl">Hell &amp; Back.</span>
         </h2>
         <p className="cta-sub">
-          Join the early access list for faction reveals, development updates,
+          Join the early access list for faction reveals, dev updates,
           and iOS playtest opportunities.
         </p>
 
         {!submitted ? (
           <form className="cta-form" onSubmit={submit} noValidate>
             <label className="cta-field cta-field-email">
-              <span className="cta-label mono">EMAIL</span>
+              <span className="cta-label">EMAIL</span>
               <input
                 type="email"
                 value={email}
-                onChange={(e)=>setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="commander@station.net"
                 aria-label="Email address"
               />
             </label>
 
             <fieldset className="cta-field">
-              <legend className="cta-label mono">PLATFORM</legend>
+              <legend className="cta-label">PLATFORM</legend>
               <div className="seg">
                 {['ios','android','both'].map(p => (
-                  <button type="button" key={p}
-                    className={'seg-btn ' + (platform === p ? 'on' : '')}
-                    onClick={()=>setPlatform(p)}>
+                  <button
+                    type="button" key={p}
+                    className={`seg-btn${platform === p ? ' on' : ''}`}
+                    onClick={() => setPlatform(p)}
+                  >
                     {p === 'ios' ? 'iOS' : p === 'android' ? 'Android' : 'Both'}
                   </button>
                 ))}
@@ -250,13 +329,15 @@ const CTASection = () => {
             </fieldset>
 
             <fieldset className="cta-field">
-              <legend className="cta-label mono">PREFERRED DOCTRINE</legend>
+              <legend className="cta-label">PREFERRED DOCTRINE</legend>
               <div className="seg">
-                {FACTIONS.map(f => (
-                  <button type="button" key={f.key}
-                    className={'seg-btn ' + (faction === f.key ? 'on' : '')}
-                    onClick={()=>setFaction(f.key)}>
-                    {f.name}
+                {FACTIONS.map(ft => (
+                  <button
+                    type="button" key={ft.key}
+                    className={`seg-btn${faction === ft.key ? ' on' : ''}`}
+                    onClick={() => setFaction(ft.key)}
+                  >
+                    {ft.name}
                   </button>
                 ))}
               </div>
@@ -266,8 +347,8 @@ const CTASection = () => {
               Transmit <Glyph.arrow width="18" height="18"/>
             </button>
 
-            {error && <div className="cta-error mono">! {error}</div>}
-            <p className="cta-fineprint mono">
+            {error && <div className="cta-error">! {error}</div>}
+            <p className="cta-fineprint">
               No spam. Unsubscribe in one tap. We will never sell your callsign.
             </p>
           </form>
@@ -280,7 +361,7 @@ const CTASection = () => {
               Beta keys ship in batches — watch your inbox.
             </p>
             <div className="cta-success-meta mono">
-              CALLSIGN · CMDR-{Math.floor(Math.random()*9000+1000)} //
+              CALLSIGN · CMDR-{Math.floor(Math.random() * 9000 + 1000)} //
               DOCTRINE · {faction.toUpperCase()} //
               PLATFORM · {platform.toUpperCase()}
             </div>
@@ -291,7 +372,7 @@ const CTASection = () => {
   );
 };
 
-/* ---------- Footer ---------- */
+/* ── Footer ───────────────────────────────────────────── */
 const Footer = () => (
   <footer className="foot">
     <div className="foot-inner">
@@ -313,48 +394,66 @@ const Footer = () => (
   </footer>
 );
 
-/* ---------- Tweaks ---------- */
+/* ── Tweaks panel ─────────────────────────────────────── */
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
-  "accent": "#f0a83a",
-  "scanlines": true,
-  "spinSpeed": 18,
-  "noise": true,
+  "accent":      "#f0a83a",
+  "scanlines":   true,
+  "spinSpeed":   18,
+  "noise":       true,
   "monoCorners": true
 }/*EDITMODE-END*/;
 
 const Tweaks = ({ tweaks, setTweak }) => (
   <TweaksPanel title="TWEAKS" subtitle="Visual & motion controls">
     <TweakSection title="Color">
-      <TweakColor label="Accent" value={tweaks.accent} onChange={(v)=>setTweak('accent', v)}/>
+      <TweakColor label="Accent" value={tweaks.accent} onChange={(v) => setTweak('accent', v)}/>
     </TweakSection>
     <TweakSection title="Atmosphere">
-      <TweakToggle label="Scanlines" value={tweaks.scanlines} onChange={(v)=>setTweak('scanlines', v)}/>
-      <TweakToggle label="Film grain" value={tweaks.noise} onChange={(v)=>setTweak('noise', v)}/>
-      <TweakToggle label="HUD corners" value={tweaks.monoCorners} onChange={(v)=>setTweak('monoCorners', v)}/>
+      <TweakToggle label="Scanlines"  value={tweaks.scanlines}    onChange={(v) => setTweak('scanlines', v)}/>
+      <TweakToggle label="Film grain" value={tweaks.noise}        onChange={(v) => setTweak('noise', v)}/>
+      <TweakToggle label="HUD corners" value={tweaks.monoCorners} onChange={(v) => setTweak('monoCorners', v)}/>
     </TweakSection>
     <TweakSection title="Soldier">
-      <TweakSlider label="Rotation period (s)" min={6} max={40} step={1} value={tweaks.spinSpeed} onChange={(v)=>setTweak('spinSpeed', v)}/>
+      <TweakSlider label="Rotation period (s)" min={6} max={40} step={1}
+        value={tweaks.spinSpeed} onChange={(v) => setTweak('spinSpeed', v)}/>
     </TweakSection>
   </TweaksPanel>
 );
 
-/* ---------- App ---------- */
+/* ── App ──────────────────────────────────────────────── */
 const App = () => {
   const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
 
+  /* Apply CSS tokens */
   useEffect(() => {
     const r = document.documentElement;
     r.style.setProperty('--accent-user', tweaks.accent);
-    r.style.setProperty('--spin-speed', tweaks.spinSpeed + 's');
-    r.classList.toggle('no-scan', !tweaks.scanlines);
-    r.classList.toggle('no-noise', !tweaks.noise);
+    r.style.setProperty('--spin-speed',  tweaks.spinSpeed + 's');
+    r.classList.toggle('no-scan',    !tweaks.scanlines);
+    r.classList.toggle('no-noise',   !tweaks.noise);
     r.classList.toggle('no-corners', !tweaks.monoCorners);
   }, [tweaks]);
+
+  /* Scroll-reveal via IntersectionObserver */
+  useEffect(() => {
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('revealed');
+          io.unobserve(e.target);
+        }
+      }),
+      { threshold: 0.1, rootMargin: '0px 0px -32px 0px' }
+    );
+    document.querySelectorAll('[data-reveal]').forEach(el => io.observe(el));
+    return () => io.disconnect();
+  }, []);
 
   return (
     <>
       <Nav/>
       <CinematicHero/>
+      <Marquee/>
       <FactionsSection/>
       <MobileGameplaySection/>
       <StrategySection/>
